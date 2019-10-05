@@ -1,0 +1,35 @@
+[package]
+name = "drone-svd"
+version = "0.10.0"
+authors = ["Valentine Valyaeff <valentine.valyaeff@gmail.com>"]
+edition = "2018"
+repository = "https://github.com/drone-os/drone-svd"
+homepage = "https://www.drone-os.com/"
+documentation = "https://api.drone-os.com/drone-svd/0.10/drone_svd/"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = [
+    "framework",
+    "real-time",
+    "bare-metal",
+    "rtos",
+    "firmware",
+]
+categories = [
+    "embedded",
+    "asynchronous",
+    "concurrency",
+    "no-std",
+    "hardware-support",
+]
+description = """
+CMSIS-SVD parser for Drone, an Embedded Operating System.
+"""
+
+[badges]
+maintenance = { status = "actively-developed" }
+
+[dependencies]
+failure = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde-xml-rs = "0.2"
