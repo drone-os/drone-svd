@@ -1,4 +1,4 @@
-use crate::peripheral::Peripheral;
+use crate::{deserialize_int_opt, peripheral::Peripheral, Access};
 use failure::Error;
 use serde::{Deserialize, Deserializer};
 use std::{
@@ -14,6 +14,14 @@ use std::{
 pub struct Device {
     /// The string identifies the device or device series.
     pub name: String,
+    /// Default bit-width of any register contained in the device.
+    #[serde(default, deserialize_with = "deserialize_int_opt")]
+    pub size: Option<u32>,
+    /// Default value for all registers at RESET.
+    #[serde(default, deserialize_with = "deserialize_int_opt")]
+    pub reset_value: Option<u32>,
+    /// Default access rights for all registers.
+    pub access: Option<Access>,
     pub(crate) peripherals: Peripherals,
 }
 
@@ -21,7 +29,7 @@ pub struct Device {
 #[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
 pub(crate) struct Peripherals {
-    #[serde(deserialize_with = "deserialize_peripheral", default)]
+    #[serde(default, deserialize_with = "deserialize_peripheral")]
     pub(crate) peripheral: BTreeMap<String, Peripheral>,
 }
 
@@ -30,6 +38,9 @@ impl Device {
     pub fn new(name: String) -> Self {
         Self {
             name,
+            size: None,
+            reset_value: None,
+            access: None,
             peripherals: Peripherals::default(),
         }
     }
@@ -71,13 +82,7 @@ impl Device {
             if except.iter().any(|&name| name == peripheral.name) {
                 continue;
             }
-            peripheral.generate_regs(
-                &self.peripherals,
-                regs,
-                pool_number,
-                pool_size,
-                &mut counter,
-            )?;
+            peripheral.generate_regs(&self, regs, pool_number, pool_size, &mut counter)?;
         }
         Ok(())
     }
@@ -89,29 +94,24 @@ impl Device {
         reg_index: &mut File,
         interrupts: &mut File,
         except: &[&str],
+        reg_index_macro: &str,
     ) -> Result<(), Error> {
         let mut int_names = HashSet::new();
         writeln!(reg_index, "reg::tokens! {{")?;
         writeln!(
             reg_index,
-            "  /// Defines an index of {} register tokens.",
+            "    /// Defines an index of {} register tokens.",
             self.name
         )?;
-        writeln!(reg_index, "  pub macro stm32_reg_tokens;")?;
+        writeln!(reg_index, "    pub macro {};", reg_index_macro)?;
         writeln!(
             reg_index,
-            "  use macro ::drone_cortex_m::map::cortex_m_reg_tokens;"
+            "    use macro drone_cortex_m::map::cortex_m_reg_tokens;"
         )?;
-        writeln!(reg_index, "  super::inner;")?;
-        writeln!(reg_index, "  crate::reg;")?;
+        writeln!(reg_index, "    super::inner;")?;
+        writeln!(reg_index, "    crate::reg;")?;
         for peripheral in self.peripherals.peripheral.values() {
-            peripheral.generate_rest(
-                &self.peripherals,
-                &mut int_names,
-                reg_index,
-                interrupts,
-                except,
-            )?;
+            peripheral.generate_rest(&self, &mut int_names, reg_index, interrupts, except)?;
         }
         writeln!(reg_index, "}}")?;
         Ok(())

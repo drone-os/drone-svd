@@ -20,6 +20,7 @@
 #![deny(elided_lifetimes_in_paths)]
 #![warn(missing_docs)]
 #![warn(clippy::pedantic)]
+#![allow(clippy::module_name_repetitions)]
 
 mod device;
 mod field;
@@ -38,6 +39,7 @@ use serde::{de, Deserialize, Deserializer};
 use std::{
     fs::File,
     io::{prelude::*, BufReader},
+    num::ParseIntError,
     ops::Range,
     path::Path,
 };
@@ -48,14 +50,19 @@ pub const BIT_BAND: Range<u32> = 0x4000_0000..0x4010_0000;
 /// Predefined access rights.
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case")]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 pub enum Access {
-    /// Read operations have an undefined result.
+    /// Read operations have an undefined result. Write access is permitted.
     WriteOnly,
-    /// Read access is permitted.
+    /// Read access is permitted. Write operations have an undefined result.
     ReadOnly,
-    /// Read and write accesses are permitted.
+    /// Read and write accesses are permitted. Writes affect the state of the
+    /// register and reads return the register value.
     ReadWrite,
+    /// Read access is always permitted. Only the first write access after a
+    /// reset will have an effect on the content. Other write operations have an
+    /// undefined result.
+    ReadWriteonce,
 }
 
 /// Parse the SVD file at `path`.
@@ -67,19 +74,52 @@ pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device, Error> {
     Ok(device)
 }
 
-fn deserialize_hex<'de, D>(deserializer: D) -> Result<u32, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-    let s = s.trim_start_matches("0x").trim_start_matches("0X");
-    u32::from_str_radix(&s, 16).map_err(de::Error::custom)
+pub(crate) trait DimGroup {
+    fn dim(&self) -> Option<(u32, u32)>;
+
+    fn name(&self) -> &String;
+
+    fn dim_group(&self) -> Vec<(String, u32)> {
+        if let Some((count, step)) = self.dim() {
+            if count > 1 {
+                return (0..count)
+                    .map(|i| (self.name().replace("[%s]", &format!("_{}", i)), i * step))
+                    .collect();
+            }
+        }
+        vec![(self.name().clone(), 0)]
+    }
 }
 
-fn deserialize_dec<'de, D>(deserializer: D) -> Result<u32, D::Error>
+pub(crate) fn deserialize_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let s = String::deserialize(deserializer)?;
-    u32::from_str_radix(&s, 10).map_err(de::Error::custom)
+    parse_int(&String::deserialize(deserializer)?).map_err(de::Error::custom)
+}
+
+pub(crate) fn deserialize_int_opt<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = Option::<String>::deserialize(deserializer)?;
+    if let Some(s) = s {
+        parse_int(&s).map(Some).map_err(de::Error::custom)
+    } else {
+        Ok(None)
+    }
+}
+
+fn parse_int(src: &str) -> Result<u32, ParseIntError> {
+    let mut range = 0..src.len();
+    let radix = if src.starts_with("0x") || src.starts_with("0X") {
+        range.start += 2;
+        16
+    } else if src.starts_with('0') && src.len() > 1 {
+        range.start += 1;
+        8
+    } else {
+        10
+    };
+    u32::from_str_radix(&src[range], radix)
 }
