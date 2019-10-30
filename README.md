@@ -8,7 +8,7 @@ CMSIS-SVD parser for Drone, an Embedded Operating System.
 ## Documentation
 
 - [Drone Book](https://book.drone-os.com/)
-- [API documentation](https://api.drone-os.com/drone-cortex-m-svd/0.10/)
+- [API documentation](https://api.drone-os.com/drone-svd/0.11/)
 
 ## Usage
 
@@ -16,7 +16,7 @@ Place the following to the Cargo.toml:
 
 ```toml
 [dependencies]
-drone-cortex-m-svd = { version = "0.10.0" }
+drone-svd = { version = "0.11.0" }
 ```
 
 ## License

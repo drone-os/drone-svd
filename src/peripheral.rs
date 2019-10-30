@@ -4,7 +4,7 @@ use crate::{
     register::{Cluster, Register, RegisterTree, RegisterTreeVec},
     Access, DimGroup, BIT_BAND,
 };
-use failure::{err_msg, Error};
+use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use std::{
     cmp::max,
@@ -107,7 +107,7 @@ impl Peripheral {
         pool_number: usize,
         pool_size: usize,
         counter: &mut usize,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let parent = self.derived_from(device)?;
         for (clusters, register) in self.registers(parent) {
             *counter += 1;
@@ -204,14 +204,14 @@ impl Peripheral {
         reg_index: &mut File,
         interrupts: &mut File,
         except: &[&str],
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let parent = self.derived_from(device)?;
         if except.iter().all(|&except| except != self.name) {
             let description = self
                 .description
                 .as_ref()
                 .or_else(|| parent.and_then(|x| x.description.as_ref()))
-                .ok_or_else(|| err_msg("Peripheral description not found"))?;
+                .ok_or_else(|| anyhow!("Peripheral description not found"))?;
             for (peripheral_name, _) in self.dim_group() {
                 for line in description.lines() {
                     writeln!(reg_index, "    /// {}", line.trim())?;
@@ -255,14 +255,14 @@ impl Peripheral {
         Ok(())
     }
 
-    fn derived_from<'a>(&'a self, device: &'a Device) -> Result<Option<&'a Self>, Error> {
+    fn derived_from<'a>(&'a self, device: &'a Device) -> Result<Option<&'a Self>> {
         Ok(if let Some(derived_from) = &self.derived_from {
             Some(
                 device
                     .peripherals
                     .peripheral
                     .get(derived_from)
-                    .ok_or_else(|| err_msg("Peripheral `derivedFrom` not found"))?,
+                    .ok_or_else(|| anyhow!("Peripheral `derivedFrom` not found"))?,
             )
         } else {
             None

@@ -1,5 +1,5 @@
 use crate::{deserialize_int, deserialize_int_opt, field::Field, Access, DimGroup};
-use failure::Error;
+use anyhow::Result;
 use serde::{Deserialize, Deserializer};
 use std::{fs::File, io::Write};
 
@@ -112,11 +112,7 @@ impl Register {
 }
 
 impl Fields {
-    pub(crate) fn generate_regs(
-        &self,
-        base_access: Option<Access>,
-        regs: &mut File,
-    ) -> Result<(), Error> {
+    pub(crate) fn generate_regs(&self, base_access: Option<Access>, regs: &mut File) -> Result<()> {
         for field in &self.field {
             for (name, offset) in field.dim_group() {
                 for line in field.description.lines() {

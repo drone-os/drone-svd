@@ -3,7 +3,7 @@
 //! # Documentation
 //!
 //! - [Drone Book](https://book.drone-os.com/)
-//! - [API documentation](https://api.drone-os.com/drone-cortex-m-svd/0.10/)
+//! - [API documentation](https://api.drone-os.com/drone-svd/0.11/)
 //!
 //! # Usage
 //!
@@ -11,16 +11,15 @@
 //!
 //! ```toml
 //! [dependencies]
-//! drone-cortex-m-svd = { version = "0.10.0" }
+//! drone-svd = { version = "0.11.0" }
 //! ```
 
 #![feature(generator_trait)]
 #![feature(generators)]
-#![feature(non_exhaustive)]
 #![deny(elided_lifetimes_in_paths)]
 #![warn(missing_docs)]
 #![warn(clippy::pedantic)]
-#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::module_name_repetitions, clippy::must_use_candidate)]
 
 mod device;
 mod field;
@@ -34,7 +33,7 @@ pub use self::{
     register::Register,
 };
 
-use failure::Error;
+use anyhow::Error;
 use serde::{de, Deserialize, Deserializer};
 use std::{
     fs::File,

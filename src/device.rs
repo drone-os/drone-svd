@@ -1,5 +1,5 @@
 use crate::{deserialize_int_opt, peripheral::Peripheral, Access};
-use failure::Error;
+use anyhow::Result;
 use serde::{Deserialize, Deserializer};
 use std::{
     collections::{BTreeMap, HashSet},
@@ -76,7 +76,7 @@ impl Device {
         except: &[&str],
         pool_number: usize,
         pool_size: usize,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let mut counter = 0;
         for peripheral in self.peripherals.peripheral.values() {
             if except.iter().any(|&name| name == peripheral.name) {
@@ -95,7 +95,7 @@ impl Device {
         interrupts: &mut File,
         except: &[&str],
         reg_index_macro: &str,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         let mut int_names = HashSet::new();
         writeln!(reg_index, "reg::tokens! {{")?;
         writeln!(
