@@ -36,6 +36,7 @@ pub use self::{
 use anyhow::Error;
 use serde::{de, Deserialize, Deserializer};
 use std::{
+    env,
     fs::File,
     io::{prelude::*, BufReader},
     num::ParseIntError,
@@ -71,6 +72,18 @@ pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device, Error> {
     input.read_to_string(&mut xml)?;
     let device = serde_xml_rs::deserialize(xml.as_bytes())?;
     Ok(device)
+}
+
+/// Instructs cargo to rerun the build script when RUSTFLAGS environment
+/// variables changed.
+pub fn rerun_if_env_changed() {
+    for (var, _) in env::vars_os() {
+        if let Some(var) = var.to_str() {
+            if var.ends_with("RUSTFLAGS") {
+                println!("cargo:rerun-if-env-changed={}", var);
+            }
+        }
+    }
 }
 
 pub(crate) trait DimGroup {
