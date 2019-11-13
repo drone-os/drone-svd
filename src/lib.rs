@@ -33,7 +33,7 @@ pub use self::{
     register::Register,
 };
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use serde::{de, Deserialize, Deserializer};
 use std::{
     env,
@@ -70,8 +70,7 @@ pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device, Error> {
     let mut input = BufReader::new(File::open(path)?);
     let mut xml = String::new();
     input.read_to_string(&mut xml)?;
-    let device = serde_xml_rs::deserialize(xml.as_bytes())?;
-    Ok(device)
+    serde_xml_rs::from_reader(xml.as_bytes()).map_err(|err| anyhow!("{}", err))
 }
 
 /// Instructs cargo to rerun the build script when RUSTFLAGS environment
