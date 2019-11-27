@@ -13,4 +13,6 @@ Possible log types:
 
 ### Unreleased
 
+### v0.11.1 (2019-11-27)
+
 - [changed] Upgraded to `serde-xml-rs` 0.3

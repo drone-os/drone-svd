@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! drone-svd = { version = "0.11.0" }
+//! drone-svd = { version = "0.11.1" }
 //! ```
 
 #![feature(generator_trait)]
