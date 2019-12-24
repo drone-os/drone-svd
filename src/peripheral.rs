@@ -239,11 +239,7 @@ impl Peripheral {
         }
         for interrupt in &self.interrupt {
             if int_names.insert(interrupt.name.to_owned()) {
-                let &Interrupt {
-                    ref name,
-                    ref description,
-                    value,
-                } = interrupt;
+                let &Interrupt { ref name, ref description, value } = interrupt;
                 writeln!(interrupts, "thr::int! {{")?;
                 for line in description.lines() {
                     writeln!(interrupts, "    /// {}", line.trim())?;
@@ -311,8 +307,7 @@ impl Peripheral {
 
 impl DimGroup for Peripheral {
     fn dim(&self) -> Option<(u32, u32)> {
-        self.dim
-            .and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
+        self.dim.and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
     }
 
     fn name(&self) -> &String {

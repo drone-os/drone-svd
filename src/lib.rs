@@ -114,11 +114,7 @@ where
     D: Deserializer<'de>,
 {
     let s = Option::<String>::deserialize(deserializer)?;
-    if let Some(s) = s {
-        parse_int(&s).map(Some).map_err(de::Error::custom)
-    } else {
-        Ok(None)
-    }
+    if let Some(s) = s { parse_int(&s).map(Some).map_err(de::Error::custom) } else { Ok(None) }
 }
 
 fn parse_int(src: &str) -> Result<u32, ParseIntError> {

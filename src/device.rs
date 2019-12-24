@@ -52,9 +52,7 @@ impl Device {
 
     /// Inserts a new peripheral `peripheral`.
     pub fn add_periph(&mut self, peripheral: Peripheral) {
-        self.peripherals
-            .peripheral
-            .insert(peripheral.name.clone(), peripheral);
+        self.peripherals.peripheral.insert(peripheral.name.clone(), peripheral);
     }
 
     /// Inserts a new peripheral initialized by `f`.
@@ -98,16 +96,9 @@ impl Device {
     ) -> Result<()> {
         let mut int_names = HashSet::new();
         writeln!(reg_index, "reg::tokens! {{")?;
-        writeln!(
-            reg_index,
-            "    /// Defines an index of {} register tokens.",
-            self.name
-        )?;
+        writeln!(reg_index, "    /// Defines an index of {} register tokens.", self.name)?;
         writeln!(reg_index, "    pub macro {};", reg_index_macro)?;
-        writeln!(
-            reg_index,
-            "    use macro drone_cortex_m::map::cortex_m_reg_tokens;"
-        )?;
+        writeln!(reg_index, "    use macro drone_cortex_m::map::cortex_m_reg_tokens;")?;
         writeln!(reg_index, "    super::inner;")?;
         writeln!(reg_index, "    crate::reg;")?;
         for peripheral in self.peripherals.peripheral.values() {

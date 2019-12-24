@@ -73,21 +73,12 @@ pub(crate) struct Fields {
 impl Register {
     /// Returns a mutable reference to the field with name `name`.
     pub fn field(&mut self, name: &str) -> &mut Field {
-        self.fields
-            .as_mut()
-            .unwrap()
-            .field
-            .iter_mut()
-            .find(|field| field.name == name)
-            .unwrap()
+        self.fields.as_mut().unwrap().field.iter_mut().find(|field| field.name == name).unwrap()
     }
 
     /// Adds a new field `field`.
     pub fn add_field(&mut self, field: Field) {
-        self.fields
-            .get_or_insert_with(Default::default)
-            .field
-            .push(field);
+        self.fields.get_or_insert_with(Default::default).field.push(field);
     }
 
     /// Adds a new field initialized by `f`.
@@ -208,8 +199,7 @@ impl RegisterTreeVec for Vec<RegisterTree> {
 
 impl DimGroup for Cluster {
     fn dim(&self) -> Option<(u32, u32)> {
-        self.dim
-            .and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
+        self.dim.and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
     }
 
     fn name(&self) -> &String {
@@ -219,8 +209,7 @@ impl DimGroup for Cluster {
 
 impl DimGroup for Register {
     fn dim(&self) -> Option<(u32, u32)> {
-        self.dim
-            .and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
+        self.dim.and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
     }
 
     fn name(&self) -> &String {

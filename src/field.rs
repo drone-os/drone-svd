@@ -50,8 +50,7 @@ impl Field {
 
 impl DimGroup for Field {
     fn dim(&self) -> Option<(u32, u32)> {
-        self.dim
-            .and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
+        self.dim.and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
     }
 
     fn name(&self) -> &String {
