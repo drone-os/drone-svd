@@ -103,7 +103,12 @@ impl Register {
 }
 
 impl Fields {
-    pub(crate) fn generate_regs(&self, base_access: Option<Access>, regs: &mut File) -> Result<()> {
+    pub(crate) fn generate_regs(
+        &self,
+        base_access: Option<Access>,
+        prepend_to_name: &str,
+        regs: &mut File,
+    ) -> Result<()> {
         for field in &self.field {
             for (name, offset) in field.dim_group() {
                 for line in field.description.lines() {
@@ -111,7 +116,8 @@ impl Fields {
                 }
                 write!(
                     regs,
-                    "    {} {{ {} {}",
+                    "    {}{} {{ {} {}",
+                    prepend_to_name,
                     name,
                     field.bit_offset() + offset,
                     field.bit_width()
