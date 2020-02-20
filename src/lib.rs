@@ -62,6 +62,8 @@ pub enum Access {
     /// Read access is always permitted. Only the first write access after a
     /// reset will have an effect on the content. Other write operations have an
     /// undefined result.
+    #[serde(alias = "read-writeonce")]
+    #[serde(alias = "read-writeOnce")]
     ReadWriteonce,
 }
 
