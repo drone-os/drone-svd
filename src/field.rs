@@ -12,6 +12,9 @@ pub struct Field {
     /// Specify the address increment, in Bytes, between two neighboring array members in the address map.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim_increment: Option<u32>,
+    /// Define the indices to use, if not numeric.  Comma separated (e.g. `A,B`).
+    #[serde(default)]
+    pub dim_index: Option<String>,
     /// Name string used to identify the field.
     pub name: String,
     /// String describing the details of the register.
@@ -51,6 +54,10 @@ impl Field {
 impl DimGroup for Field {
     fn dim(&self) -> Option<(u32, u32)> {
         self.dim.and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
+    }
+
+    fn dim_index(&self) -> &Option<String> {
+        &self.dim_index
     }
 
     fn name(&self) -> &String {

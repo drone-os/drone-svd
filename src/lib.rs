@@ -88,13 +88,27 @@ pub fn rerun_if_env_changed() {
 pub(crate) trait DimGroup {
     fn dim(&self) -> Option<(u32, u32)>;
 
+    fn dim_index(&self) -> &Option<String>;
+
     fn name(&self) -> &String;
 
     fn dim_group(&self) -> Vec<(String, u32)> {
         if let Some((count, step)) = self.dim() {
             if count > 1 {
-                return (0..count)
-                    .map(|i| (self.name().replace("[%s]", &format!("_{}", i)), i * step))
+                let indices = self
+                    .dim_index()
+                    .as_ref()
+                    .map(|idx| idx.split(',').into_iter().map(|s| s.to_owned()).collect::<Vec<_>>())
+                    .unwrap_or_else(|| (0..count).map(|i| format!("{}", i)).collect::<Vec<_>>());
+                return indices
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, idx)| {
+                        (
+                            self.name().replace("[%s]", &format!("_{}", idx)).replace("%s", &idx),
+                            i as u32 * step,
+                        )
+                    })
                     .collect();
             }
         }
