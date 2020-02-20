@@ -32,6 +32,9 @@ pub struct Peripheral {
     pub name: String,
     /// The string provides an overview of the purpose and functionality of the peripheral.
     pub description: Option<String>,
+    /// The string to prepend to every register name of this peripheral.
+    #[serde(default)]
+    pub prepend_to_name: Option<String>,
     /// Lowest address reserved or used by the peripheral.
     #[serde(deserialize_with = "deserialize_int")]
     pub base_address: u32,
@@ -187,7 +190,11 @@ impl Peripheral {
                         }
                         writeln!(regs, ";")?;
                         if let Some(fields) = &register.fields {
-                            fields.generate_regs(access, regs)?;
+                            fields.generate_regs(
+                                access,
+                                self.prepend_to_name.as_deref().unwrap_or(""),
+                                regs,
+                            )?;
                         }
                         writeln!(regs, "}}")?;
                     }
