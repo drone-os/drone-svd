@@ -1,11 +1,21 @@
-use crate::{deserialize_int_opt, peripheral::Peripheral, Access};
-use anyhow::Result;
-use serde::{Deserialize, Deserializer};
-use std::{
-    collections::{BTreeMap, HashSet},
-    fs::File,
-    io::Write,
+mod access;
+mod field;
+mod peripheral;
+mod register;
+
+pub use self::{
+    access::Access,
+    field::Field,
+    peripheral::{Interrupt, Peripheral},
+    register::Register,
 };
+
+pub(crate) use self::register::{Cluster, RegisterTree};
+
+use anyhow::Result;
+use indexmap::IndexMap;
+use serde::{de, Deserialize, Deserializer};
+use std::num::ParseIntError;
 
 /// The outermost frame of the description.
 #[non_exhaustive]
@@ -30,7 +40,7 @@ pub struct Device {
 #[derive(Clone, Debug, Default, Deserialize)]
 pub(crate) struct Peripherals {
     #[serde(default, deserialize_with = "deserialize_peripheral")]
-    pub(crate) peripheral: BTreeMap<String, Peripheral>,
+    pub(crate) peripheral: IndexMap<String, Peripheral>,
 }
 
 impl Device {
@@ -43,6 +53,11 @@ impl Device {
             access: None,
             peripherals: Peripherals::default(),
         }
+    }
+
+    /// Returns an iterator over all peripheral names.
+    pub fn periph_names(&self) -> impl Iterator<Item = &String> + '_ {
+        self.peripherals.peripheral.keys()
     }
 
     /// Returns a mutable reference to the peripheral with name `name`.
@@ -66,56 +81,44 @@ impl Device {
     pub fn remove_periph(&mut self, name: &str) -> Peripheral {
         self.peripherals.peripheral.remove(name).unwrap()
     }
-
-    /// Writes register binding definitions to the file `regs`.
-    pub fn generate_regs(
-        self,
-        regs: &mut File,
-        except: &[&str],
-        pool_number: usize,
-        pool_size: usize,
-    ) -> Result<()> {
-        let mut counter = 0;
-        for peripheral in self.peripherals.peripheral.values() {
-            if except.iter().any(|&name| name == peripheral.name) {
-                continue;
-            }
-            peripheral.generate_regs(&self, regs, pool_number, pool_size, &mut counter)?;
-        }
-        Ok(())
-    }
-
-    /// Writes interrupt binding definitions to the file `interrupts` and
-    /// register bindings index to the file `reg_index`.
-    pub fn generate_rest(
-        self,
-        reg_index: &mut File,
-        interrupts: &mut File,
-        except: &[&str],
-        reg_index_macro: &str,
-    ) -> Result<()> {
-        let mut int_names = HashSet::new();
-        writeln!(reg_index, "reg::tokens! {{")?;
-        writeln!(reg_index, "    /// Defines an index of {} register tokens.", self.name)?;
-        writeln!(reg_index, "    pub macro {};", reg_index_macro)?;
-        writeln!(reg_index, "    use macro drone_cortex_m::map::cortex_m_reg_tokens;")?;
-        writeln!(reg_index, "    super::inner;")?;
-        writeln!(reg_index, "    crate::reg;")?;
-        for peripheral in self.peripherals.peripheral.values() {
-            peripheral.generate_rest(&self, &mut int_names, reg_index, interrupts, except)?;
-        }
-        writeln!(reg_index, "}}")?;
-        Ok(())
-    }
 }
 
-fn deserialize_peripheral<'de, D>(deserializer: D) -> Result<BTreeMap<String, Peripheral>, D::Error>
+fn deserialize_peripheral<'de, D>(deserializer: D) -> Result<IndexMap<String, Peripheral>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let mut map = BTreeMap::new();
+    let mut map = IndexMap::new();
     for peripheral in Vec::<Peripheral>::deserialize(deserializer)? {
         map.insert(peripheral.name.clone(), peripheral);
     }
     Ok(map)
+}
+
+fn deserialize_int<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    parse_int(&String::deserialize(deserializer)?).map_err(de::Error::custom)
+}
+
+fn deserialize_int_opt<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = Option::<String>::deserialize(deserializer)?;
+    if let Some(s) = s { parse_int(&s).map(Some).map_err(de::Error::custom) } else { Ok(None) }
+}
+
+fn parse_int(src: &str) -> Result<u32, ParseIntError> {
+    let mut range = 0..src.len();
+    let radix = if src.starts_with("0x") || src.starts_with("0X") {
+        range.start += 2;
+        16
+    } else if src.starts_with('0') && src.len() > 1 {
+        range.start += 1;
+        8
+    } else {
+        10
+    };
+    u32::from_str_radix(&src[range], radix)
 }

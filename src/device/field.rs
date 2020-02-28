@@ -1,4 +1,4 @@
-use crate::{deserialize_int_opt, Access, DimGroup};
+use super::{access::Access, deserialize_int_opt};
 use serde::Deserialize;
 
 /// Bit-field properties of a register.
@@ -45,15 +45,5 @@ impl Field {
         self.bit_width
             .or_else(|| self.lsb.and_then(|lsb| self.msb.map(|msb| msb - lsb + 1)))
             .expect("bit-range is missing")
-    }
-}
-
-impl DimGroup for Field {
-    fn dim(&self) -> Option<(u32, u32)> {
-        self.dim.and_then(|dim| self.dim_increment.map(|dim_increment| (dim, dim_increment)))
-    }
-
-    fn name(&self) -> &String {
-        &self.name
     }
 }
