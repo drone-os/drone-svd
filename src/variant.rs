@@ -1,7 +1,7 @@
 use crate::{
     device::{Cluster, RegisterTree},
     traverse::{traverse_peripheral_registers, traverse_registers},
-    Device, Peripheral, Register,
+    Config, Device, Peripheral, Register,
 };
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
@@ -20,7 +20,7 @@ impl<'a> Variant<'a> {
     }
 }
 
-pub(crate) fn trace_variants(device: &mut Device, except: &[&str]) -> Result<()> {
+pub(crate) fn trace_variants(device: &mut Device, config: &Config<'_>) -> Result<()> {
     fn peripheral_variants<'a, 'b>(
         device: &'a mut Device,
         periheral_name: &'b str,
@@ -28,7 +28,7 @@ pub(crate) fn trace_variants(device: &mut Device, except: &[&str]) -> Result<()>
         device.peripherals.peripheral.get_mut(periheral_name).map(|p| &mut p.variants)
     }
     for key in device.peripherals.peripheral.keys().cloned().collect::<Vec<_>>() {
-        if except.iter().any(|&name| name == key) {
+        if config.exclude_peripherals.iter().any(|&name| name == key) {
             continue;
         }
         let peripheral = device.peripherals.peripheral.get_mut(&key).unwrap();

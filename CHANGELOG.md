@@ -13,6 +13,7 @@ Possible log types:
 
 ### Unreleased
 
+- [changed] Bit-band region generation is configurable now
 - [added] Added support for `alternatePeripheral`, `alternateCluster`,
   `alternateRegister` tags
 

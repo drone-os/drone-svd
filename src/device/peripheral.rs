@@ -1,12 +1,12 @@
 use super::{
     access::Access,
     deserialize_int, deserialize_int_opt,
-    register::{deserialize_register_tree, tree_reg, tree_remove_reg, Register, RegisterTree},
+    register::{tree_reg, tree_remove_reg, Register, RegisterTree},
     Device,
 };
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 /// A peripheral of a device.
 #[non_exhaustive]
@@ -117,4 +117,21 @@ impl Peripheral {
             .map(String::as_str)
             .ok_or_else(|| anyhow!("peripheral description not found"))
     }
+}
+
+fn deserialize_register_tree<'de, D>(
+    deserializer: D,
+) -> Result<IndexMap<String, RegisterTree>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let mut map = IndexMap::new();
+    for tree in Vec::<RegisterTree>::deserialize(deserializer)? {
+        let name = match &tree {
+            RegisterTree::Register(register) => register.name.clone(),
+            RegisterTree::Cluster(cluster) => cluster.name.clone(),
+        };
+        map.insert(name, tree);
+    }
+    Ok(map)
 }

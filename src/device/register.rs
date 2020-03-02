@@ -258,7 +258,7 @@ pub(crate) fn tree_remove_reg(tree: &mut IndexMap<String, RegisterTree>, path: &
     panic!("register not found");
 }
 
-pub(crate) fn deserialize_register_tree<'de, D>(
+fn deserialize_register_tree<'de, D>(
     deserializer: D,
 ) -> Result<IndexMap<String, RegisterTree>, D::Error>
 where

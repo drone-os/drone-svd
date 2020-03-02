@@ -31,16 +31,16 @@
 )]
 
 mod device;
-mod generate_interrupts;
-mod generate_registers;
+mod interrupt;
+mod register;
 mod traverse;
 mod variant;
 
 pub use device::{Access, Device, Field, Interrupt, Peripheral, Register};
-pub use generate_registers::generate_registers;
 
 use self::{
-    generate_interrupts::generate_interrupts, generate_registers::generate_index,
+    interrupt::generate_interrupts,
+    register::{generate_index, generate_registers},
     variant::trace_variants,
 };
 use anyhow::{anyhow, Result};
@@ -52,8 +52,57 @@ use std::{
     path::Path,
 };
 
-/// Bit-band memory region.
-pub const BIT_BAND: Range<u32> = 0x4000_0000..0x4010_0000;
+/// Options to configure how bindings are generated.
+pub struct Config<'a> {
+    macro_name: &'a str,
+    bit_band: Option<Range<u32>>,
+    exclude_peripherals: Vec<&'a str>,
+}
+
+impl<'a> Config<'a> {
+    /// Creates a blank new set of options ready for configuration.
+    pub fn new(macro_name: &'a str) -> Self {
+        Self { macro_name, bit_band: None, exclude_peripherals: Vec::new() }
+    }
+
+    /// Extends the list of peripherals to exclude from generated bindings.
+    pub fn exclude_peripherals(&mut self, exclude_peripherals: &[&'a str]) -> &mut Self {
+        self.exclude_peripherals.extend(exclude_peripherals);
+        self
+    }
+
+    /// Sets bit-band memory region.
+    pub fn bit_band(&mut self, bit_band: Range<u32>) -> &mut Self {
+        self.bit_band = Some(bit_band);
+        self
+    }
+
+    /// Generates register bindings.
+    pub fn generate_regs(
+        self,
+        output: &mut File,
+        mut device: Device,
+        pool_number: usize,
+        pool_size: usize,
+    ) -> Result<()> {
+        trace_variants(&mut device, &self)?;
+        generate_registers(output, &device, pool_number, pool_size, &self)?;
+        Ok(())
+    }
+
+    /// Generates registers index and interrupt bindings.
+    pub fn generate_rest(
+        self,
+        index_output: &mut File,
+        interrupts_output: &mut File,
+        mut device: Device,
+    ) -> Result<()> {
+        trace_variants(&mut device, &self)?;
+        generate_index(index_output, &device, &self)?;
+        generate_interrupts(interrupts_output, &device)?;
+        Ok(())
+    }
+}
 
 /// Parse the SVD file at `path`.
 pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device> {
@@ -61,20 +110,6 @@ pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device> {
     let mut xml = String::new();
     input.read_to_string(&mut xml)?;
     serde_xml_rs::from_reader(xml.as_bytes()).map_err(|err| anyhow!("{}", err))
-}
-
-/// Writes registers index and interrupt bindings.
-pub fn generate_rest(
-    index_output: &mut File,
-    interrupts_output: &mut File,
-    mut device: Device,
-    macro_name: &str,
-    except: &[&str],
-) -> Result<()> {
-    trace_variants(&mut device, except)?;
-    generate_index(index_output, &device, macro_name, except)?;
-    generate_interrupts(interrupts_output, &device)?;
-    Ok(())
 }
 
 /// Instructs cargo to rerun the build script when RUSTFLAGS environment

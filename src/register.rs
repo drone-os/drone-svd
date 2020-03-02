@@ -1,7 +1,7 @@
 use crate::{
     traverse::{for_each_clusters_combination, traverse_peripheral_registers},
-    variant::{collect_variants, trace_variants},
-    Access, Device, Field, Peripheral, Register, BIT_BAND,
+    variant::collect_variants,
+    Access, Config, Device, Field, Peripheral, Register,
 };
 use anyhow::Result;
 use indexmap::IndexMap;
@@ -18,26 +18,24 @@ struct Instance {
     access: Option<Access>,
 }
 
-/// Generates register bindings.
-pub fn generate_registers(
+pub(crate) fn generate_registers(
     output: &mut File,
-    mut device: Device,
+    device: &Device,
     pool_number: usize,
     pool_size: usize,
-    except: &[&str],
+    config: &Config<'_>,
 ) -> Result<()> {
     let mut counter = 0;
     let stagger = move || {
         counter += 1;
         counter % pool_size != pool_number - 1
     };
-    trace_variants(&mut device, except)?;
     let mut generated = HashSet::new();
     for peripheral in device.peripherals.peripheral.values() {
-        if except.iter().any(|&name| name == peripheral.name) {
+        if config.exclude_peripherals.iter().any(|&name| name == peripheral.name) {
             continue;
         }
-        generate_peripheral(output, &device, peripheral, &mut generated, stagger)?;
+        generate_peripheral(output, &device, peripheral, &mut generated, stagger, config)?;
     }
     Ok(())
 }
@@ -45,19 +43,18 @@ pub fn generate_registers(
 pub(crate) fn generate_index(
     output: &mut File,
     device: &Device,
-    macro_name: &str,
-    except: &[&str],
+    config: &Config<'_>,
 ) -> Result<()> {
     let mut index = IndexMap::new();
     for peripheral in device.peripherals.peripheral.values() {
-        if except.iter().any(|&name| name == peripheral.name) {
+        if config.exclude_peripherals.iter().any(|&name| name == peripheral.name) {
             continue;
         }
         generate_peripheral_index(device, peripheral, &mut index)?;
     }
     writeln!(output, "reg::tokens! {{")?;
     writeln!(output, "    /// Defines an index of {} register tokens.", device.name)?;
-    writeln!(output, "    pub macro {};", macro_name)?;
+    writeln!(output, "    pub macro {};", config.macro_name)?;
     writeln!(output, "    use macro drone_cortex_m::map::cortex_m_reg_tokens;")?;
     writeln!(output, "    super::inner;")?;
     writeln!(output, "    crate::reg;")?;
@@ -94,6 +91,7 @@ fn generate_peripheral(
     peripheral: &Peripheral,
     generated: &mut HashSet<(String, Vec<String>)>,
     mut stagger: impl FnMut() -> bool,
+    config: &Config<'_>,
 ) -> Result<()> {
     let parent = peripheral.derived_from(device)?;
     traverse_peripheral_registers(peripheral, parent, |clusters, register| {
@@ -172,7 +170,7 @@ fn generate_peripheral(
                             }
                         }
                         if !stagger() {
-                            generate_variants(output, &instances)?;
+                            generate_variants(output, &instances, config)?;
                         }
                     }
                     Ok(())
@@ -234,7 +232,11 @@ fn generate_peripheral_index(
     Ok(())
 }
 
-fn generate_variants(output: &mut File, instances: &[(&Register, Instance)]) -> Result<()> {
+fn generate_variants(
+    output: &mut File,
+    instances: &[(&Register, Instance)],
+    config: &Config<'_>,
+) -> Result<()> {
     writeln!(output, "reg! {{")?;
     for (register, instance) in instances {
         let Instance {
@@ -287,8 +289,10 @@ fn generate_variants(output: &mut File, instances: &[(&Register, Instance)]) -> 
                 write!(output, " WReg")?;
             }
         }
-        if BIT_BAND.contains(&address) {
-            write!(output, " RegBitBand")?;
+        if let Some(bit_band) = &config.bit_band {
+            if bit_band.contains(&address) {
+                write!(output, " RegBitBand")?;
+            }
         }
         writeln!(output, ";")?;
         if let Some(fields) = &register.fields {
