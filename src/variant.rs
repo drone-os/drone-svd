@@ -11,12 +11,11 @@ pub(crate) struct Variant<'a> {
     pub(crate) peripheral: &'a Peripheral,
     pub(crate) clusters: Vec<&'a Cluster>,
     pub(crate) register: &'a Register,
-    pub(crate) name: Option<String>,
 }
 
 impl<'a> Variant<'a> {
     fn new(peripheral: &'a Peripheral, clusters: Vec<&'a Cluster>, register: &'a Register) -> Self {
-        Self { peripheral, clusters, register, name: None }
+        Self { peripheral, clusters, register }
     }
 }
 
@@ -127,46 +126,7 @@ pub(crate) fn collect_variants<'a>(
         })?;
     }
 
-    name_variants(&mut variants);
     Ok(variants)
-}
-
-fn name_variants(variants: &mut [Variant<'_>]) {
-    if variants.len() < 2 {
-        return;
-    }
-    let mut names = Vec::new();
-    names.push(unique_names(variants, |v| &v.peripheral.name));
-    for i in 0..variants[0].clusters.len() {
-        names.push(unique_names(variants, |v| &v.clusters[i].name));
-    }
-    names.push(unique_names(variants, |v| &v.register.name));
-    let mut joined_names = Vec::with_capacity(variants.len());
-    for i in 0..variants.len() {
-        let mut joined_name = String::new();
-        for (j, name) in names.iter().map(|n| &n[i]).filter(|n| !n.is_empty()).enumerate() {
-            if j > 0 {
-                joined_name.push('_');
-            }
-            joined_name.push_str(name);
-        }
-        joined_names.push(joined_name);
-    }
-    for (variant, name) in variants.iter_mut().zip(joined_names) {
-        variant.name = Some(name);
-    }
-}
-
-fn unique_names(
-    variants: &[Variant<'_>],
-    f: impl for<'a> Fn(&'a Variant<'_>) -> &'a str + Copy,
-) -> Vec<String> {
-    let first_name = f(&variants[0]);
-    if variants.iter().all(|v| f(v) == first_name) {
-        variants.iter().map(|_| String::new()).collect()
-    } else {
-        variants.iter().map(|v| f(v).to_string()).collect()
-    }
 }
 
 fn trace_tree(tree: &mut IndexMap<String, RegisterTree>) -> Result<()> {

@@ -48,6 +48,7 @@ use std::{
     env,
     fs::File,
     io::{prelude::*, BufReader},
+    mem,
     ops::Range,
     path::Path,
 };
@@ -85,6 +86,7 @@ impl<'a> Config<'a> {
         pool_number: usize,
         pool_size: usize,
     ) -> Result<()> {
+        normalize(&mut device)?;
         trace_variants(&mut device, &self)?;
         generate_registers(output, &device, pool_number, pool_size, &self)?;
         Ok(())
@@ -97,6 +99,7 @@ impl<'a> Config<'a> {
         interrupts_output: &mut File,
         mut device: Device,
     ) -> Result<()> {
+        normalize(&mut device)?;
         trace_variants(&mut device, &self)?;
         generate_index(index_output, &device, &self)?;
         generate_interrupts(interrupts_output, &device)?;
@@ -122,4 +125,12 @@ pub fn rerun_if_env_changed() {
             }
         }
     }
+}
+
+fn normalize(device: &mut Device) -> Result<()> {
+    device.peripherals.peripheral = mem::take(&mut device.peripherals.peripheral)
+        .into_iter()
+        .map(|(_, peripheral)| (peripheral.name.clone(), peripheral))
+        .collect();
+    Ok(())
 }

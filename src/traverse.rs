@@ -58,13 +58,14 @@ pub(crate) fn for_each_clusters_combination<T: Clone>(
     mut f: impl FnMut(T, &Cluster, u32) -> Result<T>,
     mut g: impl FnMut(&[T]) -> Result<()>,
 ) -> Result<()> {
-    let mut matrix = vec![vec![0; variants.len()]; variants[0].clusters.len()];
+    let mut matrix =
+        vec![vec![0; variants.len()]; variants.iter().map(|v| v.clusters.len()).max().unwrap_or(0)];
     for (i, variant) in variants.iter().enumerate() {
         for (j, cluster) in variant.clusters.iter().enumerate() {
             matrix[j][i] = cluster.dim.unwrap_or(1);
         }
     }
-    let dim = matrix.iter().map(|row| *row.iter().max().unwrap() as usize).collect::<Vec<_>>();
+    let dim = matrix.iter().map(|row| row.iter().copied().max().unwrap_or(1)).collect::<Vec<_>>();
     'outer: for n in 0..dim.iter().product() {
         let mut combination = Vec::new();
         for (i, variant) in variants.iter().enumerate() {

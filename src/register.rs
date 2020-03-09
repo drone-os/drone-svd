@@ -11,7 +11,6 @@ struct Instance {
     description: Vec<String>,
     peripheral_name: String,
     name: Vec<String>,
-    variant_name: Option<String>,
     address: u32,
     size: u32,
     reset_value: u32,
@@ -113,7 +112,8 @@ fn generate_peripheral(
                 ))
             })
             .collect::<Result<Vec<_>>>()?;
-        for peripheral_n in 0..variants.iter().map(|v| v.peripheral.dim.unwrap_or(1)).max().unwrap()
+        for peripheral_n in
+            0..variants.iter().map(|v| v.peripheral.dim.unwrap_or(1)).max().unwrap_or(1)
         {
             let peripheral_data = variants
                 .iter()
@@ -135,7 +135,7 @@ fn generate_peripheral(
                 },
                 |clusters_data| {
                     'outer: for register_n in
-                        0..variants.iter().map(|v| v.register.dim.unwrap_or(1)).max().unwrap()
+                        0..variants.iter().map(|v| v.register.dim.unwrap_or(1)).max().unwrap_or(1)
                     {
                         let mut instances = Vec::new();
                         for (i, variant) in variants.iter().enumerate() {
@@ -147,8 +147,6 @@ fn generate_peripheral(
                                 let (ref description, size, reset_value, access) = register_data[i];
                                 let mut name = clusters_name.clone();
                                 name.push(dim_name(register_n, &variant.register.name));
-                                let variant_name =
-                                    variant.name.as_ref().map(|name| dim_name(register_n, name));
                                 let address = variant.peripheral.base_address
                                     + peripheral_offset
                                     + clusters_address
@@ -161,7 +159,6 @@ fn generate_peripheral(
                                     description: description.clone(),
                                     peripheral_name: peripheral_name.clone(),
                                     name,
-                                    variant_name,
                                     address,
                                     size,
                                     reset_value,
@@ -190,7 +187,8 @@ fn generate_peripheral_index(
     let parent = peripheral.derived_from(device)?;
     traverse_peripheral_registers(peripheral, parent, |clusters, register| {
         let variants = collect_variants(device, peripheral, parent, &clusters, register)?;
-        for peripheral_n in 0..variants.iter().map(|v| v.peripheral.dim.unwrap_or(1)).max().unwrap()
+        for peripheral_n in
+            0..variants.iter().map(|v| v.peripheral.dim.unwrap_or(1)).max().unwrap_or(1)
         {
             let peripheral_name = variants
                 .iter()
@@ -205,7 +203,7 @@ fn generate_peripheral_index(
                 },
                 |clusters_name| {
                     for register_n in
-                        0..variants.iter().map(|v| v.register.dim.unwrap_or(1)).max().unwrap()
+                        0..variants.iter().map(|v| v.register.dim.unwrap_or(1)).max().unwrap_or(1)
                     {
                         for (i, variant) in variants.iter().enumerate() {
                             if peripheral_n < variant.peripheral.dim.unwrap_or(1)
@@ -239,16 +237,8 @@ fn generate_variants(
 ) -> Result<()> {
     writeln!(output, "reg! {{")?;
     for (register, instance) in instances {
-        let Instance {
-            description,
-            peripheral_name,
-            name,
-            variant_name,
-            address,
-            size,
-            reset_value,
-            access,
-        } = instance;
+        let Instance { description, peripheral_name, name, address, size, reset_value, access } =
+            instance;
         for description in description {
             for line in description.lines() {
                 writeln!(output, "    /// {}", line.trim())?;
@@ -260,9 +250,6 @@ fn generate_variants(
                 write!(output, "_")?;
             }
             write!(output, "{}", name)?;
-        }
-        if let Some(variant_name) = variant_name {
-            write!(output, " {}", variant_name)?;
         }
         writeln!(output, ";")?;
         writeln!(
