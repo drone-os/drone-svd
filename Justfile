@@ -8,15 +8,15 @@ deps:
 fmt:
 	cargo fmt
 
-# Check for mistakes
+# Check the source code for mistakes
 lint:
 	cargo clippy
 
-# Generate the docs
+# Build the documentation
 doc:
 	cargo doc
 
-# Open the docs in a browser
+# Open the documentation in a browser
 doc-open: doc
 	cargo doc --open
 
@@ -28,8 +28,8 @@ test:
 readme:
 	cargo readme -o README.md
 
-# Bump crate versions
-version-bump version drone-core-version:
+# Bump the version
+version-bump version:
 	sed -i "s/\(api\.drone-os\.com\/drone-svd\/\)[0-9]\+\(\.[0-9]\+\)\+/\1$(echo {{version}} | sed 's/\(.*\)\.[0-9]\+/\1/')/" \
 		Cargo.toml src/lib.rs
 	sed -i '/\[.*\]/h;/version = ".*"/{x;s/\[package\]/version = "{{version}}"/;t;x}' \

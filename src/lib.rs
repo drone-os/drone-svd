@@ -7,7 +7,7 @@
 //!
 //! # Usage
 //!
-//! Place the following to the Cargo.toml:
+//! Add the crate to your `Cargo.toml` dependencies:
 //!
 //! ```toml
 //! [dependencies]
@@ -20,7 +20,6 @@
 #![feature(generators)]
 #![feature(str_strip)]
 #![feature(track_caller)]
-#![deny(elided_lifetimes_in_paths)]
 #![warn(missing_docs)]
 #![warn(clippy::pedantic)]
 #![allow(

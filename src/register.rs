@@ -54,7 +54,7 @@ pub(crate) fn generate_index(
     writeln!(output, "reg::tokens! {{")?;
     writeln!(output, "    /// Defines an index of {} register tokens.", device.name)?;
     writeln!(output, "    pub macro {};", config.macro_name)?;
-    writeln!(output, "    use macro drone_cortex_m::map::cortex_m_reg_tokens;")?;
+    writeln!(output, "    use macro drone_cortexm::map::cortexm_reg_tokens;")?;
     writeln!(output, "    super::inner;")?;
     writeln!(output, "    crate::reg;")?;
     for (peripheral_name, registers) in index {
