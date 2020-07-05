@@ -271,7 +271,7 @@ fn generate_variants(
                 write!(output, " RReg")?;
                 write!(output, " RoReg")?;
             }
-            Some(Access::ReadWrite) | Some(Access::ReadWriteonce) | None => {
+            Some(Access::ReadWrite | Access::ReadWriteonce) | None => {
                 write!(output, " RReg")?;
                 write!(output, " WReg")?;
             }
@@ -314,7 +314,7 @@ fn generate_field(output: &mut File, field: &Field, base_access: Option<Access>)
                 write!(output, " RRRegField")?;
                 write!(output, " RoRRegField")?;
             }
-            Some(Access::ReadWrite) | Some(Access::ReadWriteonce) | None => {
+            Some(Access::ReadWrite | Access::ReadWriteonce) | None => {
                 write!(output, " RRRegField")?;
                 write!(output, " WWRegField")?;
             }

@@ -3,7 +3,7 @@
 //! # Documentation
 //!
 //! - [Drone Book](https://book.drone-os.com/)
-//! - [API documentation](https://api.drone-os.com/drone-svd/0.12/)
+//! - [API documentation](https://api.drone-os.com/drone-svd/0.13/)
 //!
 //! # Usage
 //!
@@ -11,15 +11,14 @@
 //!
 //! ```toml
 //! [dependencies]
-//! drone-svd = { version = "0.12.0" }
+//! drone-svd = { version = "0.13.0" }
 //! ```
 
 #![feature(bool_to_option)]
 #![feature(cell_update)]
 #![feature(generator_trait)]
 #![feature(generators)]
-#![feature(str_strip)]
-#![feature(track_caller)]
+#![feature(or_patterns)]
 #![warn(missing_docs)]
 #![warn(clippy::pedantic)]
 #![allow(
