@@ -30,15 +30,13 @@
 )]
 
 mod device;
-mod interrupt;
 mod register;
 mod traverse;
 mod variant;
 
-pub use device::{Access, Device, Field, Interrupt, Peripheral, Register};
+pub use device::{Access, Device, Field, Peripheral, Register};
 
 use self::{
-    interrupt::generate_interrupts,
     register::{generate_index, generate_registers},
     variant::trace_variants,
 };
@@ -91,17 +89,11 @@ impl<'a> Config<'a> {
         Ok(())
     }
 
-    /// Generates registers index and interrupt bindings.
-    pub fn generate_rest(
-        self,
-        index_output: &mut File,
-        interrupts_output: &mut File,
-        mut device: Device,
-    ) -> Result<()> {
+    /// Generates registers index.
+    pub fn generate_index(self, index_output: &mut File, mut device: Device) -> Result<()> {
         normalize(&mut device)?;
         trace_variants(&mut device, &self)?;
         generate_index(index_output, &device, &self)?;
-        generate_interrupts(interrupts_output, &device)?;
         Ok(())
     }
 }

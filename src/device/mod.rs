@@ -3,12 +3,7 @@ mod field;
 mod peripheral;
 mod register;
 
-pub use self::{
-    access::Access,
-    field::Field,
-    peripheral::{Interrupt, Peripheral},
-    register::Register,
-};
+pub use self::{access::Access, field::Field, peripheral::Peripheral, register::Register};
 
 pub(crate) use self::register::{Cluster, RegisterTree};
 
