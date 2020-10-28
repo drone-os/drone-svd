@@ -100,8 +100,8 @@ fn deserialize_int_opt<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let s = Option::<String>::deserialize(deserializer)?;
-    if let Some(s) = s { parse_int(&s).map(Some).map_err(de::Error::custom) } else { Ok(None) }
+    Option::<String>::deserialize(deserializer)?
+        .map_or(Ok(None), |s| parse_int(&s).map(Some).map_err(de::Error::custom))
 }
 
 fn parse_int(src: &str) -> Result<u32, ParseIntError> {
