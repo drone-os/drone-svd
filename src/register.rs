@@ -244,24 +244,23 @@ fn generate_variants(
                 writeln!(output, "    /// {}", line.trim())?;
             }
         }
-        write!(output, "    pub mod {} ", peripheral_name)?;
+        write!(output, "    pub {} ", peripheral_name)?;
         for (i, name) in name.iter().enumerate() {
             if i > 0 {
                 write!(output, "_")?;
             }
             write!(output, "{}", name)?;
         }
-        writeln!(output, ";")?;
+        writeln!(output, " => {{")?;
+        writeln!(output, "        address => 0x{:04X}_{:04X};", address >> 16, address & 0xFFFF)?;
+        writeln!(output, "        size => {};", size)?;
         writeln!(
             output,
-            "    0x{:04X}_{:04X} {} 0x{:04X}_{:04X}",
-            address >> 16,
-            address & 0xFFFF,
-            size,
+            "        reset => 0x{:04X}_{:04X};",
             reset_value >> 16,
-            reset_value & 0xFFFF,
+            reset_value & 0xFFFF
         )?;
-        write!(output, "   ")?;
+        write!(output, "        traits => {{")?;
         match access {
             Some(Access::WriteOnly) => {
                 write!(output, " WReg")?;
@@ -271,7 +270,7 @@ fn generate_variants(
                 write!(output, " RReg")?;
                 write!(output, " RoReg")?;
             }
-            Some(Access::ReadWrite) | Some(Access::ReadWriteonce) | None => {
+            Some(Access::ReadWrite | Access::ReadWriteonce) | None => {
                 write!(output, " RReg")?;
                 write!(output, " WReg")?;
             }
@@ -281,12 +280,15 @@ fn generate_variants(
                 write!(output, " RegBitBand")?;
             }
         }
-        writeln!(output, ";")?;
+        writeln!(output, " }};")?;
+        writeln!(output, "        fields => {{")?;
         if let Some(fields) = &register.fields {
             for field in &fields.field {
                 generate_field(output, field, *access)?;
             }
         }
+        writeln!(output, "        }};")?;
+        writeln!(output, "    }};")?;
     }
     writeln!(output, "}}")?;
     Ok(())
@@ -296,15 +298,12 @@ fn generate_field(output: &mut File, field: &Field, base_access: Option<Access>)
     for number in 0..field.dim.unwrap_or(1) {
         let offset = number * field.dim_increment.unwrap_or(0);
         for line in field.description.lines() {
-            writeln!(output, "    /// {}", line.trim())?;
+            writeln!(output, "            /// {}", line.trim())?;
         }
-        write!(
-            output,
-            "    {} {{ {} {}",
-            dim_name(number, &field.name),
-            field.bit_offset() + offset,
-            field.bit_width()
-        )?;
+        writeln!(output, "            {} => {{", dim_name(number, &field.name))?;
+        writeln!(output, "                offset => {};", field.bit_offset() + offset)?;
+        writeln!(output, "                width => {};", field.bit_width())?;
+        write!(output, "                traits => {{")?;
         match field.access.or(base_access) {
             Some(Access::WriteOnly) => {
                 write!(output, " WWRegField")?;
@@ -314,12 +313,13 @@ fn generate_field(output: &mut File, field: &Field, base_access: Option<Access>)
                 write!(output, " RRRegField")?;
                 write!(output, " RoRRegField")?;
             }
-            Some(Access::ReadWrite) | Some(Access::ReadWriteonce) | None => {
+            Some(Access::ReadWrite | Access::ReadWriteonce) | None => {
                 write!(output, " RRRegField")?;
                 write!(output, " WWRegField")?;
             }
         }
-        writeln!(output, " }}")?;
+        writeln!(output, " }};")?;
+        writeln!(output, "            }};")?;
     }
     Ok(())
 }

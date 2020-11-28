@@ -3,7 +3,7 @@
 //! # Documentation
 //!
 //! - [Drone Book](https://book.drone-os.com/)
-//! - [API documentation](https://api.drone-os.com/drone-svd/0.12/)
+//! - [API documentation](https://api.drone-os.com/drone-svd/0.13/)
 //!
 //! # Usage
 //!
@@ -11,16 +11,16 @@
 //!
 //! ```toml
 //! [dependencies]
-//! drone-svd = { version = "0.12.0" }
+//! drone-svd = { version = "0.13.0" }
 //! ```
 
 #![feature(bool_to_option)]
 #![feature(cell_update)]
 #![feature(generator_trait)]
 #![feature(generators)]
-#![feature(str_strip)]
-#![feature(track_caller)]
-#![warn(missing_docs)]
+#![feature(or_patterns)]
+#![feature(unsafe_block_in_unsafe_fn)]
+#![warn(missing_docs, unsafe_op_in_unsafe_fn)]
 #![warn(clippy::pedantic)]
 #![allow(
     clippy::cast_possible_truncation,
@@ -30,15 +30,13 @@
 )]
 
 mod device;
-mod interrupt;
 mod register;
 mod traverse;
 mod variant;
 
-pub use device::{Access, Device, Field, Interrupt, Peripheral, Register};
+pub use device::{Access, Device, Field, Peripheral, Register};
 
 use self::{
-    interrupt::generate_interrupts,
     register::{generate_index, generate_registers},
     variant::trace_variants,
 };
@@ -85,23 +83,17 @@ impl<'a> Config<'a> {
         pool_number: usize,
         pool_size: usize,
     ) -> Result<()> {
-        normalize(&mut device)?;
+        normalize(&mut device);
         trace_variants(&mut device, &self)?;
         generate_registers(output, &device, pool_number, pool_size, &self)?;
         Ok(())
     }
 
-    /// Generates registers index and interrupt bindings.
-    pub fn generate_rest(
-        self,
-        index_output: &mut File,
-        interrupts_output: &mut File,
-        mut device: Device,
-    ) -> Result<()> {
-        normalize(&mut device)?;
+    /// Generates registers index.
+    pub fn generate_index(self, index_output: &mut File, mut device: Device) -> Result<()> {
+        normalize(&mut device);
         trace_variants(&mut device, &self)?;
         generate_index(index_output, &device, &self)?;
-        generate_interrupts(interrupts_output, &device)?;
         Ok(())
     }
 }
@@ -126,10 +118,9 @@ pub fn rerun_if_env_changed() {
     }
 }
 
-fn normalize(device: &mut Device) -> Result<()> {
+fn normalize(device: &mut Device) {
     device.peripherals.peripheral = mem::take(&mut device.peripherals.peripheral)
         .into_iter()
         .map(|(_, peripheral)| (peripheral.name.clone(), peripheral))
         .collect();
-    Ok(())
 }

@@ -39,27 +39,9 @@ pub struct Peripheral {
     pub reset_value: Option<u32>,
     /// Default access rights for all registers in the peripheral.
     pub access: Option<Access>,
-    /// Associated interrupts.
-    #[serde(default)]
-    pub interrupt: Vec<Interrupt>,
     pub(crate) registers: Option<Registers>,
     #[serde(skip)]
     pub(crate) variants: Vec<String>,
-}
-
-/// An interrupt associated with a peripheral.
-#[non_exhaustive]
-#[serde(rename_all = "camelCase")]
-#[derive(Clone, Debug, Default, Deserialize)]
-pub struct Interrupt {
-    /// The string represents the interrupt name.
-    pub name: String,
-    /// The string describes the interrupt.
-    #[serde(default)]
-    pub description: String,
-    /// Represents the enumeration index value associated to the interrupt.
-    #[serde(deserialize_with = "deserialize_int")]
-    pub value: u32,
 }
 
 #[non_exhaustive]

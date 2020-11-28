@@ -80,11 +80,10 @@ pub(crate) fn collect_variants<'a>(
     variants.push(Variant::new(peripheral, clusters.to_vec(), register));
 
     for o_register in &register.variants {
-        let o_register = if let Some(cluster) = clusters.last() {
-            cluster.register.get(o_register)
-        } else {
-            peripheral_get(peripheral, parent, o_register)
-        };
+        let o_register = clusters.last().map_or_else(
+            || peripheral_get(peripheral, parent, o_register),
+            |cluster| cluster.register.get(o_register),
+        );
         let o_register = o_register.unwrap().unwrap_register_ref();
         variants.push(Variant::new(peripheral, clusters.to_vec(), o_register));
     }
