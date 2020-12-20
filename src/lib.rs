@@ -3,7 +3,7 @@
 //! # Documentation
 //!
 //! - [Drone Book](https://book.drone-os.com/)
-//! - [API documentation](https://api.drone-os.com/drone-svd/0.13/)
+//! - [API documentation](https://api.drone-os.com/drone-svd/0.14/)
 //!
 //! # Usage
 //!
@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! drone-svd = { version = "0.13.0" }
+//! drone-svd = { version = "0.14.0" }
 //! ```
 
 #![feature(bool_to_option)]
