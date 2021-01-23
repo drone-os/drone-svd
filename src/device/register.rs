@@ -219,9 +219,8 @@ pub(crate) fn tree_reg<'a, 'b>(
                 if register.name == name {
                     if path.next().is_none() {
                         return register;
-                    } else {
-                        panic!("extra segments at the tail")
                     }
+                    panic!("extra segments at the tail");
                 }
             }
             RegisterTree::Cluster(cluster) => {
@@ -243,9 +242,8 @@ pub(crate) fn tree_remove_reg(tree: &mut IndexMap<String, RegisterTree>, path: &
                 if register.name == name {
                     if path.next().is_none() {
                         return tree.remove(&key).unwrap().unwrap_register();
-                    } else {
-                        panic!("extra segments at the tail")
                     }
+                    panic!("extra segments at the tail");
                 }
             }
             RegisterTree::Cluster(cluster) => {

@@ -76,8 +76,7 @@ pub(crate) fn collect_variants<'a>(
             .or_else(|| parent.and_then(|p| p.registers.as_ref().and_then(|r| r.tree.get(name))))
     }
 
-    let mut variants = Vec::new();
-    variants.push(Variant::new(peripheral, clusters.to_vec(), register));
+    let mut variants = vec![Variant::new(peripheral, clusters.to_vec(), register)];
 
     for o_register in &register.variants {
         let o_register = clusters.last().map_or_else(
@@ -99,8 +98,7 @@ pub(crate) fn collect_variants<'a>(
                 peripheral_get(peripheral, parent, o_cluster)
             };
             let o_cluster = o_cluster.unwrap().unwrap_cluster_ref();
-            let mut paths = Vec::new();
-            paths.push((Vec::new(), o_cluster.register.values()));
+            let paths = vec![(Vec::new(), o_cluster.register.values())];
             traverse_registers(paths, |o_clusters, o_register| {
                 if is_paths_equal(&o_clusters, o_register, descendant_clusters, register) {
                     let mut clusters =

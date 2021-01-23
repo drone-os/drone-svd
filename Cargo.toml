@@ -1,5 +1,3 @@
-cargo-features = ["resolver"]
-
 [package]
 name = "drone-svd"
 version = "0.14.0"
