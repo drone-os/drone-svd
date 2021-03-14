@@ -14,8 +14,8 @@ use std::num::ParseIntError;
 
 /// The outermost frame of the description.
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Device {
     /// The string identifies the device or device series.
     pub name: String,
@@ -31,8 +31,8 @@ pub struct Device {
 }
 
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Peripherals {
     #[serde(default, deserialize_with = "deserialize_peripheral")]
     pub(crate) peripheral: IndexMap<String, Peripheral>,

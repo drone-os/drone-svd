@@ -6,16 +6,16 @@ use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
 
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) enum RegisterTree {
     Register(Register),
     Cluster(Cluster),
 }
 
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Cluster {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
@@ -43,8 +43,8 @@ pub(crate) struct Cluster {
 
 /// The description of a register.
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Register {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
@@ -78,8 +78,8 @@ pub struct Register {
 }
 
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Fields {
     pub(crate) field: Vec<Field>,
 }

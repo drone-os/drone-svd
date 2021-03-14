@@ -25,6 +25,7 @@
 #![allow(
     clippy::cast_possible_truncation,
     clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
     clippy::module_name_repetitions,
     clippy::must_use_candidate
 )]

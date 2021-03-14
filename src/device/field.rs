@@ -3,8 +3,8 @@ use serde::Deserialize;
 
 /// Bit-field properties of a register.
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub struct Field {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]

@@ -10,8 +10,8 @@ use serde::{Deserialize, Deserializer};
 
 /// A peripheral of a device.
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Peripheral {
     /// The peripheral name from which to inherit data.
     pub derived_from: Option<String>,
@@ -45,8 +45,8 @@ pub struct Peripheral {
 }
 
 #[non_exhaustive]
-#[serde(rename_all = "camelCase")]
 #[derive(Clone, Debug, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct Registers {
     #[serde(rename = "$value", deserialize_with = "deserialize_register_tree")]
     pub(crate) tree: IndexMap<String, RegisterTree>,

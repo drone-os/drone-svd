@@ -2,8 +2,8 @@ use serde::Deserialize;
 
 /// Predefined access rights.
 #[non_exhaustive]
-#[serde(rename_all = "kebab-case")]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
 pub enum Access {
     /// Read operations have an undefined result. Write access is permitted.
     WriteOnly,
