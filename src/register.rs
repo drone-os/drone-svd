@@ -152,7 +152,7 @@ fn generate_peripheral(
                                     + clusters_address
                                     + variant.register.address_offset
                                     + register_n * variant.register.dim_increment.unwrap_or(0);
-                                if !generated.insert((peripheral_name.to_string(), name.to_vec())) {
+                                if !generated.insert((peripheral_name.to_string(), name.clone())) {
                                     continue 'outer;
                                 }
                                 instances.push((variant.register, Instance {
