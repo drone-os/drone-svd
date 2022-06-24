@@ -34,7 +34,7 @@ pub(crate) fn generate_registers(
         if config.exclude_peripherals.iter().any(|&name| name == peripheral.name) {
             continue;
         }
-        generate_peripheral(output, &device, peripheral, &mut generated, stagger, config)?;
+        generate_peripheral(output, device, peripheral, &mut generated, stagger, config)?;
     }
     Ok(())
 }
@@ -276,7 +276,7 @@ fn generate_variants(
             }
         }
         if let Some(bit_band) = &config.bit_band {
-            if bit_band.contains(&address) {
+            if bit_band.contains(address) {
                 write!(output, " RegBitBand")?;
             }
         }

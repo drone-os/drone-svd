@@ -14,7 +14,6 @@
 //! drone-svd = { version = "0.15.0" }
 //! ```
 
-#![feature(bool_to_option)]
 #![feature(cell_update)]
 #![feature(generator_trait)]
 #![feature(generators)]

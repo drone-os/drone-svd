@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 /// Bit-field properties of a register.
 #[non_exhaustive]
-#[derive(Clone, Debug, Default, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Field {
     /// Define the number of elements in an array.

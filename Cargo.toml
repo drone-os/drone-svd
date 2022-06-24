@@ -2,8 +2,7 @@
 name = "drone-svd"
 version = "0.15.0"
 authors = ["Valentine Valyaeff <valentine.valyaeff@gmail.com>"]
-edition = "2018"
-resolver = "2"
+edition = "2021"
 repository = "https://github.com/drone-os/drone-svd"
 homepage = "https://www.drone-os.com/"
 documentation = "https://api.drone-os.com/drone-svd/0.15/drone_svd/"
@@ -31,7 +30,7 @@ CMSIS-SVD parser for Drone, an Embedded Operating System.
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-anyhow = "1"
-serde = { version = "1", features = ["derive"] }
+anyhow = "1.0.58"
+indexmap = "1.9.0"
+serde = { version = "1.0.137", features = ["derive"] }
 serde-xml-rs = "0.4"
-indexmap = "1"
