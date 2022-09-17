@@ -1,14 +1,16 @@
 [![crates.io](https://img.shields.io/crates/v/drone-svd.svg)](https://crates.io/crates/drone-svd)
 ![maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 
-# drone-svd
+# Drone SVD
+
+<!-- cargo-rdme start -->
 
 CMSIS-SVD parser for Drone, an Embedded Operating System.
 
 ## Documentation
 
 - [Drone Book](https://book.drone-os.com/)
-- [API documentation](https://api.drone-os.com/drone-svd/0.14/)
+- [API documentation](https://api.drone-os.com/drone-svd/0.15/)
 
 ## Usage
 
@@ -16,8 +18,10 @@ Add the crate to your `Cargo.toml` dependencies:
 
 ```toml
 [dependencies]
-drone-svd = { version = "0.14.0" }
+drone-svd = { version = "0.15.0" }
 ```
+
+<!-- cargo-rdme end -->
 
 ## License
 
