@@ -38,7 +38,7 @@ use self::{
     register::{generate_index, generate_registers},
     variant::trace_variants,
 };
-use anyhow::{anyhow, Result};
+use eyre::{eyre, Result};
 use std::{
     env,
     fs::File,
@@ -101,7 +101,7 @@ pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device> {
     let mut input = BufReader::new(File::open(path)?);
     let mut xml = String::new();
     input.read_to_string(&mut xml)?;
-    serde_xml_rs::from_reader(xml.as_bytes()).map_err(|err| anyhow!("{}", err))
+    serde_xml_rs::from_reader(xml.as_bytes()).map_err(|err| eyre!("{}", err))
 }
 
 /// Instructs cargo to rerun the build script when RUSTFLAGS environment

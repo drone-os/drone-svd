@@ -4,7 +4,7 @@ use super::{
     register::{tree_reg, tree_remove_reg, Register, RegisterTree},
     Device,
 };
-use anyhow::{anyhow, Result};
+use eyre::{eyre, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
 
@@ -85,7 +85,7 @@ impl Peripheral {
                     .peripherals
                     .peripheral
                     .get(derived_from)
-                    .ok_or_else(|| anyhow!("peripheral referenced in `derivedFrom` not found"))?,
+                    .ok_or_else(|| eyre!("peripheral referenced in `derivedFrom` not found"))?,
             )
         } else {
             None
@@ -97,7 +97,7 @@ impl Peripheral {
             .as_ref()
             .or_else(|| parent.and_then(|parent| parent.description.as_ref()))
             .map(String::as_str)
-            .ok_or_else(|| anyhow!("peripheral description not found"))
+            .ok_or_else(|| eyre!("peripheral description not found"))
     }
 }
 

@@ -30,7 +30,7 @@ CMSIS-SVD parser for Drone, an Embedded Operating System.
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-anyhow = "1.0.58"
-indexmap = "1.9.0"
-serde = { version = "1.0.137", features = ["derive"] }
+eyre = "0.6.8"
+indexmap = "1.9.1"
+serde = { version = "1.0.144", features = ["derive"] }
 serde-xml-rs = "0.4"

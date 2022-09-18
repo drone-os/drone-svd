@@ -3,7 +3,7 @@ use crate::{
     variant::collect_variants,
     Access, Config, Device, Field, Peripheral, Register,
 };
-use anyhow::Result;
+use eyre::Result;
 use indexmap::IndexMap;
 use std::{collections::HashSet, fs::File, io::Write};
 

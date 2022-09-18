@@ -2,7 +2,7 @@ use super::{
     access::Access, deserialize_int, deserialize_int_opt, field::Field, peripheral::Peripheral,
     Device,
 };
-use anyhow::{anyhow, Result};
+use eyre::{eyre, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
 
@@ -125,7 +125,7 @@ impl Register {
             .or(peripheral.size)
             .or_else(|| parent.and_then(|peripheral| peripheral.size))
             .or(device.size)
-            .ok_or_else(|| anyhow!("missing register size"))
+            .ok_or_else(|| eyre!("missing register size"))
     }
 
     pub(crate) fn reset_value(
@@ -138,7 +138,7 @@ impl Register {
             .or(peripheral.reset_value)
             .or_else(|| parent.and_then(|peripheral| peripheral.reset_value))
             .or(device.reset_value)
-            .ok_or_else(|| anyhow!("missing reset value"))
+            .ok_or_else(|| eyre!("missing reset value"))
     }
 
     pub(crate) fn access(

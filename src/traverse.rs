@@ -3,7 +3,7 @@ use crate::{
     variant::Variant,
     Peripheral, Register,
 };
-use anyhow::Result;
+use eyre::Result;
 use std::collections::HashSet;
 
 pub(crate) fn traverse_peripheral_registers<'a>(

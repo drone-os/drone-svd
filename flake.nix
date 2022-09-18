@@ -15,20 +15,19 @@
       let
         rustChannel = {
           channel = "nightly";
-          date = "2022-06-18";
-          sha256 = "TX82NKIM6/V8rJ8CskbwizaDCvQeF0KvN3GkcY4XQzQ=";
+          date = "2022-09-18";
+          sha256 = "eYFYpSF2PBUJVzZGZrdtDMpVfHkypzTMLWotdEVq7eM=";
         };
 
         pkgs = nixpkgs.legacyPackages.${system};
-        rustToolchain = with fenix.packages.${system};
-          let toolchain = toolchainOf rustChannel; in
-          combine [
-            toolchain.rustc
-            toolchain.cargo
-            toolchain.clippy
-            toolchain.rust-src
-          ];
-        rustFmt = (fenix.packages.${system}.toolchainOf rustChannel).rustfmt;
+        rustToolchain = with fenix.packages.${system}; combine
+          (with toolchainOf rustChannel; [
+            rustc
+            cargo
+            clippy
+            rustfmt
+            rust-src
+          ]);
         rustAnalyzer = fenix.packages.${system}.rust-analyzer;
 
         cargoRdme = (
@@ -80,7 +79,6 @@
           name = "native";
           nativeBuildInputs = [
             rustToolchain
-            rustFmt
             rustAnalyzer
             cargoRdme
             checkAll

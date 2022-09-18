@@ -7,7 +7,7 @@ pub use self::{access::Access, field::Field, peripheral::Peripheral, register::R
 
 pub(crate) use self::register::{Cluster, RegisterTree};
 
-use anyhow::Result;
+use eyre::Result;
 use indexmap::IndexMap;
 use serde::{de, Deserialize, Deserializer};
 use std::num::ParseIntError;

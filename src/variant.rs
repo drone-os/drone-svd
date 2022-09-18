@@ -3,7 +3,7 @@ use crate::{
     traverse::{traverse_peripheral_registers, traverse_registers},
     Config, Device, Peripheral, Register,
 };
-use anyhow::{anyhow, Result};
+use eyre::{eyre, Result};
 use indexmap::IndexMap;
 
 #[derive(Debug)]
@@ -36,7 +36,7 @@ pub(crate) fn trace_variants(device: &mut Device, config: &Config<'_>) -> Result
         }
         if let Some(alternate_peripheral) = peripheral.alternate_peripheral.as_ref().cloned() {
             let variants = peripheral_variants(device, &alternate_peripheral)
-                .ok_or_else(|| anyhow!("peripheral referenced in `alternatePeripheral` not found"))?
+                .ok_or_else(|| eyre!("peripheral referenced in `alternatePeripheral` not found"))?
                 .clone();
             for variant in variants {
                 peripheral_variants(device, &variant).unwrap().push(key.clone());
@@ -139,7 +139,7 @@ fn trace_tree(tree: &mut IndexMap<String, RegisterTree>) -> Result<()> {
                 if let Some(alternate_register) = register.alternate_register.as_ref().cloned() {
                     tree.get_mut(&alternate_register)
                         .ok_or_else(|| {
-                            anyhow!("register referenced in `alternateRegister` not found")
+                            eyre!("register referenced in `alternateRegister` not found")
                         })?
                         .unwrap_register_mut()
                         .variants
@@ -150,9 +150,7 @@ fn trace_tree(tree: &mut IndexMap<String, RegisterTree>) -> Result<()> {
                 trace_tree(&mut cluster.register)?;
                 if let Some(alternate_cluster) = cluster.alternate_cluster.as_ref().cloned() {
                     let variants = cluster_variants(tree, &alternate_cluster)
-                        .ok_or_else(|| {
-                            anyhow!("cluster referenced in `alternateCluster` not found")
-                        })?
+                        .ok_or_else(|| eyre!("cluster referenced in `alternateCluster` not found"))?
                         .clone();
                     for variant in variants {
                         cluster_variants(tree, &variant).unwrap().push(key.clone());
