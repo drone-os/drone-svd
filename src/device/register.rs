@@ -1,10 +1,11 @@
-use super::{
-    access::Access, deserialize_int, deserialize_int_opt, field::Field, peripheral::Peripheral,
-    Device,
-};
 use eyre::{eyre, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
+
+use super::access::Access;
+use super::field::Field;
+use super::peripheral::Peripheral;
+use super::{deserialize_int, deserialize_int_opt, Device};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -20,7 +21,8 @@ pub(crate) struct Cluster {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim: Option<u32>,
-    /// Specify the address increment, in Bytes, between two neighboring array members in the address map.
+    /// Specify the address increment, in Bytes, between two neighboring array
+    /// members in the address map.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim_increment: Option<u32>,
     /// String to identify the cluster.
@@ -49,7 +51,8 @@ pub struct Register {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim: Option<u32>,
-    /// Specify the address increment, in Bytes, between two neighboring array members in the address map.
+    /// Specify the address increment, in Bytes, between two neighboring array
+    /// members in the address map.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim_increment: Option<u32>,
     /// String to identify the register.

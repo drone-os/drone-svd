@@ -1,12 +1,10 @@
-use super::{
-    access::Access,
-    deserialize_int, deserialize_int_opt,
-    register::{tree_reg, tree_remove_reg, Register, RegisterTree},
-    Device,
-};
 use eyre::{eyre, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
+
+use super::access::Access;
+use super::register::{tree_reg, tree_remove_reg, Register, RegisterTree};
+use super::{deserialize_int, deserialize_int_opt, Device};
 
 /// A peripheral of a device.
 #[non_exhaustive]
@@ -18,12 +16,14 @@ pub struct Peripheral {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim: Option<u32>,
-    /// Specify the address increment, in Bytes, between two neighboring array members in the address map.
+    /// Specify the address increment, in Bytes, between two neighboring array
+    /// members in the address map.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim_increment: Option<u32>,
     /// The string identifies the peripheral.
     pub name: String,
-    /// The string provides an overview of the purpose and functionality of the peripheral.
+    /// The string provides an overview of the purpose and functionality of the
+    /// peripheral.
     pub description: Option<String>,
     /// A peripheral redefining an address block needs to specify the name of
     /// the peripheral that is listed first in the description.

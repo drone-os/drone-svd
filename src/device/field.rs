@@ -1,5 +1,7 @@
-use super::{access::Access, deserialize_int_opt};
 use serde::Deserialize;
+
+use super::access::Access;
+use super::deserialize_int_opt;
 
 /// Bit-field properties of a register.
 #[non_exhaustive]
@@ -9,7 +11,8 @@ pub struct Field {
     /// Define the number of elements in an array.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim: Option<u32>,
-    /// Specify the address increment, in Bytes, between two neighboring array members in the address map.
+    /// Specify the address increment, in Bytes, between two neighboring array
+    /// members in the address map.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub dim_increment: Option<u32>,
     /// Name string used to identify the field.
@@ -17,7 +20,8 @@ pub struct Field {
     /// String describing the details of the register.
     #[serde(default)]
     pub description: String,
-    /// The position of the least significant bit of the field within the register.
+    /// The position of the least significant bit of the field within the
+    /// register.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub bit_offset: Option<u32>,
     /// The bit-width of the bitfield within the register.

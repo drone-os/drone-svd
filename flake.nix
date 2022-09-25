@@ -15,8 +15,8 @@
       let
         rustChannel = {
           channel = "nightly";
-          date = "2022-09-18";
-          sha256 = "eYFYpSF2PBUJVzZGZrdtDMpVfHkypzTMLWotdEVq7eM=";
+          date = "2022-09-23";
+          sha256 = "lv8DWMZm/vmAfC8RF8nwMXKp2xiMxtsthqTEs7bWyms=";
         };
 
         pkgs = nixpkgs.legacyPackages.${system};
