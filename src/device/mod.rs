@@ -3,17 +3,15 @@ mod field;
 mod peripheral;
 mod register;
 
-use std::num::ParseIntError;
-
-use eyre::Result;
-use indexmap::IndexMap;
-use serde::{de, Deserialize, Deserializer};
-
 pub use self::access::Access;
 pub use self::field::Field;
 pub use self::peripheral::Peripheral;
 pub use self::register::Register;
 pub(crate) use self::register::{Cluster, RegisterTree};
+use eyre::Result;
+use indexmap::IndexMap;
+use serde::{de, Deserialize, Deserializer};
+use std::num::ParseIntError;
 
 /// The outermost frame of the description.
 #[non_exhaustive]

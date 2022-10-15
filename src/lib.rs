@@ -32,18 +32,16 @@ mod register;
 mod traverse;
 mod variant;
 
+use self::register::{generate_index, generate_registers};
+use self::variant::trace_variants;
+pub use device::{Access, Device, Field, Peripheral, Register};
+use eyre::{eyre, Result};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::ops::Range;
 use std::path::Path;
 use std::{env, mem};
-
-pub use device::{Access, Device, Field, Peripheral, Register};
-use eyre::{eyre, Result};
-
-use self::register::{generate_index, generate_registers};
-use self::variant::trace_variants;
 
 /// Options to configure how bindings are generated.
 pub struct Config<'a> {

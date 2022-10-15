@@ -1,10 +1,9 @@
-use eyre::{eyre, Result};
-use indexmap::IndexMap;
-use serde::{Deserialize, Deserializer};
-
 use super::access::Access;
 use super::register::{tree_reg, tree_remove_reg, Register, RegisterTree};
 use super::{deserialize_int, deserialize_int_opt, Device};
+use eyre::{eyre, Result};
+use indexmap::IndexMap;
+use serde::{Deserialize, Deserializer};
 
 /// A peripheral of a device.
 #[non_exhaustive]

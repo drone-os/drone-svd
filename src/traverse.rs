@@ -1,10 +1,8 @@
-use std::collections::HashSet;
-
-use eyre::Result;
-
 use crate::device::{Cluster, RegisterTree};
 use crate::variant::Variant;
 use crate::{Peripheral, Register};
+use eyre::Result;
+use std::collections::HashSet;
 
 pub(crate) fn traverse_peripheral_registers<'a>(
     peripheral: &'a Peripheral,

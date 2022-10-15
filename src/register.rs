@@ -1,13 +1,11 @@
-use std::collections::HashSet;
-use std::fs::File;
-use std::io::Write;
-
-use eyre::Result;
-use indexmap::IndexMap;
-
 use crate::traverse::{for_each_clusters_combination, traverse_peripheral_registers};
 use crate::variant::collect_variants;
 use crate::{Access, Config, Device, Field, Peripheral, Register};
+use eyre::Result;
+use indexmap::IndexMap;
+use std::collections::HashSet;
+use std::fs::File;
+use std::io::Write;
 
 struct Instance {
     description: Vec<String>,

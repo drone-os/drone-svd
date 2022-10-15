@@ -1,9 +1,8 @@
-use eyre::{eyre, Result};
-use indexmap::IndexMap;
-
 use crate::device::{Cluster, RegisterTree};
 use crate::traverse::{traverse_peripheral_registers, traverse_registers};
 use crate::{Config, Device, Peripheral, Register};
+use eyre::{eyre, Result};
+use indexmap::IndexMap;
 
 #[derive(Debug)]
 pub(crate) struct Variant<'a> {

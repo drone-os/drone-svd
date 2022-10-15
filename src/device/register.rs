@@ -1,11 +1,10 @@
-use eyre::{eyre, Result};
-use indexmap::IndexMap;
-use serde::{Deserialize, Deserializer};
-
 use super::access::Access;
 use super::field::Field;
 use super::peripheral::Peripheral;
 use super::{deserialize_int, deserialize_int_opt, Device};
+use eyre::{eyre, Result};
+use indexmap::IndexMap;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,7 +1,6 @@
-use serde::Deserialize;
-
 use super::access::Access;
 use super::deserialize_int_opt;
+use serde::Deserialize;
 
 /// Bit-field properties of a register.
 #[non_exhaustive]
