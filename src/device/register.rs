@@ -146,6 +146,18 @@ impl Register {
             .or(peripheral.access)
             .or_else(|| parent.and_then(|peripheral| peripheral.access))
             .or(device.access)
+            .or_else(|| {
+                self.fields
+                    .iter()
+                    .try_fold(None, |prev_access, field| {
+                        prev_access
+                            .map_or(field.access, |prev_access| {
+                                field.access.filter(|&access| access == prev_access)
+                            })
+                            .map(Some)
+                    })
+                    .flatten()
+            })
     }
 }
 

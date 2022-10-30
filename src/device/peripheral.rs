@@ -5,7 +5,7 @@ use eyre::{eyre, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
 
-/// A peripheral of a device.
+/// Peripheral of the device.
 #[non_exhaustive]
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -87,12 +87,11 @@ impl Peripheral {
         })
     }
 
-    pub(crate) fn description<'a>(&'a self, parent: Option<&'a Peripheral>) -> Result<&'a str> {
+    pub(crate) fn description<'a>(&'a self, parent: Option<&'a Peripheral>) -> Option<&'a str> {
         self.description
             .as_ref()
             .or_else(|| parent.and_then(|parent| parent.description.as_ref()))
             .map(String::as_str)
-            .ok_or_else(|| eyre!("peripheral description not found"))
     }
 }
 

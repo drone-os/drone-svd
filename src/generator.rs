@@ -87,9 +87,10 @@ impl<'a> Generator<'a> {
         for (peripheral_name, registers) in index {
             let peripheral = &device.peripherals[&peripheral_name];
             let parent = peripheral.derived_from(&device)?;
-            let description = peripheral.description(parent)?;
-            for line in description.lines() {
-                writeln!(output, "    /// {}", line.trim())?;
+            if let Some(description) = peripheral.description(parent) {
+                for line in description.lines() {
+                    writeln!(output, "    /// {}", line.trim())?;
+                }
             }
             writeln!(output, "    pub mod {} {{", peripheral_name)?;
             for (name, primary) in registers {
