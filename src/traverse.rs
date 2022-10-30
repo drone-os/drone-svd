@@ -11,13 +11,9 @@ pub(crate) fn traverse_peripheral_registers<'a>(
 ) -> Result<()> {
     let mut paths = Vec::<(Vec<&Cluster>, _)>::new();
     if let Some(peripheral) = parent {
-        if let Some(registers) = &peripheral.registers {
-            paths.push((Vec::new(), registers.tree.values()));
-        }
+        paths.push((Vec::new(), peripheral.registers.values()));
     }
-    if let Some(registers) = &peripheral.registers {
-        paths.push((Vec::new(), registers.tree.values()));
-    }
+    paths.push((Vec::new(), peripheral.registers.values()));
     traverse_registers(paths, f)
 }
 

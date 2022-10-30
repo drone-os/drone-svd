@@ -25,80 +25,22 @@
 )]
 
 mod device;
-mod register;
+mod generator;
 mod traverse;
 mod variant;
 
-use self::register::{generate_index, generate_registers};
-use self::variant::trace_variants;
+pub use self::generator::Generator;
 pub use device::{Access, Device, Field, Peripheral, Register};
 use eyre::Result;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::mem;
-use std::ops::Range;
 use std::path::Path;
-
-/// Options to configure how bindings are generated.
-pub struct Config<'a> {
-    macro_name: &'a str,
-    bit_band: Option<Range<u32>>,
-    exclude_peripherals: Vec<&'a str>,
-}
-
-impl<'a> Config<'a> {
-    /// Creates a blank new set of options ready for configuration.
-    pub fn new(macro_name: &'a str) -> Self {
-        Self { macro_name, bit_band: None, exclude_peripherals: Vec::new() }
-    }
-
-    /// Extends the list of peripherals to exclude from generated bindings.
-    pub fn exclude_peripherals(&mut self, exclude_peripherals: &[&'a str]) -> &mut Self {
-        self.exclude_peripherals.extend(exclude_peripherals);
-        self
-    }
-
-    /// Sets bit-band memory region.
-    pub fn bit_band(&mut self, bit_band: Range<u32>) -> &mut Self {
-        self.bit_band = Some(bit_band);
-        self
-    }
-
-    /// Generates register bindings.
-    pub fn generate_regs(
-        self,
-        output: &mut File,
-        mut device: Device,
-        pool_number: usize,
-        pool_size: usize,
-    ) -> Result<()> {
-        normalize(&mut device);
-        trace_variants(&mut device, &self)?;
-        generate_registers(output, &device, pool_number, pool_size, &self)?;
-        Ok(())
-    }
-
-    /// Generates registers index.
-    pub fn generate_index(self, index_output: &mut File, mut device: Device) -> Result<()> {
-        normalize(&mut device);
-        trace_variants(&mut device, &self)?;
-        generate_index(index_output, &device, &self)?;
-        Ok(())
-    }
-}
 
 /// Parse the SVD file at `path`.
 pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device> {
     let mut input = BufReader::new(File::open(path)?);
     let mut xml = String::new();
     input.read_to_string(&mut xml)?;
-    Ok(quick_xml::de::from_str(&xml)?)
-}
-
-fn normalize(device: &mut Device) {
-    device.peripherals.peripheral = mem::take(&mut device.peripherals.peripheral)
-        .into_iter()
-        .map(|(_, peripheral)| (peripheral.name.clone(), peripheral))
-        .collect();
+    Ok(quick_xml::de::from_reader(xml.as_bytes())?)
 }

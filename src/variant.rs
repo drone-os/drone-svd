@@ -1,6 +1,6 @@
 use crate::device::{Cluster, RegisterTree};
 use crate::traverse::{traverse_peripheral_registers, traverse_registers};
-use crate::{Config, Device, Peripheral, Register};
+use crate::{Device, Peripheral, Register};
 use eyre::{eyre, Result};
 use indexmap::IndexMap;
 
@@ -17,21 +17,19 @@ impl<'a> Variant<'a> {
     }
 }
 
-pub(crate) fn trace_variants(device: &mut Device, config: &Config<'_>) -> Result<()> {
+pub(crate) fn trace_variants(device: &mut Device, exclude_peripherals: &[&str]) -> Result<()> {
     fn peripheral_variants<'a, 'b>(
         device: &'a mut Device,
         periheral_name: &'b str,
     ) -> Option<&'a mut Vec<String>> {
-        device.peripherals.peripheral.get_mut(periheral_name).map(|p| &mut p.variants)
+        device.peripherals.get_mut(periheral_name).map(|p| &mut p.variants)
     }
-    for key in device.peripherals.peripheral.keys().cloned().collect::<Vec<_>>() {
-        if config.exclude_peripherals.iter().any(|&name| name == key) {
+    for key in device.peripherals.keys().cloned().collect::<Vec<_>>() {
+        if exclude_peripherals.iter().any(|&name| name == key) {
             continue;
         }
-        let peripheral = device.peripherals.peripheral.get_mut(&key).unwrap();
-        if let Some(registers) = &mut peripheral.registers {
-            trace_tree(&mut registers.tree)?;
-        }
+        let peripheral = device.peripherals.get_mut(&key).unwrap();
+        trace_tree(&mut peripheral.registers)?;
         if let Some(alternate_peripheral) = peripheral.alternate_peripheral.as_ref().cloned() {
             let variants = peripheral_variants(device, &alternate_peripheral)
                 .ok_or_else(|| eyre!("peripheral referenced in `alternatePeripheral` not found"))?
@@ -67,11 +65,7 @@ pub(crate) fn collect_variants<'a>(
         parent: Option<&'a Peripheral>,
         name: &'b str,
     ) -> Option<&'a RegisterTree> {
-        peripheral
-            .registers
-            .as_ref()
-            .and_then(|r| r.tree.get(name))
-            .or_else(|| parent.and_then(|p| p.registers.as_ref().and_then(|r| r.tree.get(name))))
+        peripheral.registers.get(name).or_else(|| parent.and_then(|p| p.registers.get(name)))
     }
 
     let mut variants = vec![Variant::new(peripheral, clusters.to_vec(), register)];
@@ -111,7 +105,7 @@ pub(crate) fn collect_variants<'a>(
     }
 
     for o_peripheral in &peripheral.variants {
-        let o_peripheral = device.peripherals.peripheral.get(o_peripheral).unwrap();
+        let o_peripheral = device.peripherals.get(o_peripheral).unwrap();
         let o_parent = o_peripheral.derived_from(device)?;
         traverse_peripheral_registers(o_peripheral, o_parent, |o_clusters, o_register| {
             if is_paths_equal(&o_clusters, o_register, clusters, register) {

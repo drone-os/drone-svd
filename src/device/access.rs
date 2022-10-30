@@ -25,9 +25,10 @@ pub(crate) struct AccessWrapper {
 }
 
 impl AccessWrapper {
-    pub(crate) fn deserialize<'de, D: Deserializer<'de>>(
-        deserializer: D,
-    ) -> Result<Option<Access>, D::Error> {
+    pub(crate) fn deserialize<'de, D>(deserializer: D) -> Result<Option<Access>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
         Ok(<Self as Deserialize>::deserialize(deserializer)?.value)
     }
 }

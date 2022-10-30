@@ -30,42 +30,35 @@ pub struct Device {
     /// Default access rights for all registers.
     #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
-    pub(crate) peripherals: Peripherals,
+    #[serde(default, with = "PeripheralsWrapper")]
+    pub(crate) peripherals: IndexMap<String, Peripheral>,
 }
 
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct Peripherals {
-    #[serde(default, deserialize_with = "deserialize_peripheral")]
-    pub(crate) peripheral: IndexMap<String, Peripheral>,
+#[derive(Deserialize)]
+struct PeripheralsWrapper {
+    #[serde(rename = "$value")]
+    values: Vec<Peripheral>,
 }
 
 impl Device {
     /// Creates a new empty device definition.
     pub fn new(name: String) -> Self {
-        Self {
-            name,
-            size: None,
-            reset_value: None,
-            access: None,
-            peripherals: Peripherals::default(),
-        }
+        Self { name, size: None, reset_value: None, access: None, peripherals: IndexMap::new() }
     }
 
     /// Returns an iterator over all peripheral names.
     pub fn periph_names(&self) -> impl Iterator<Item = &String> + '_ {
-        self.peripherals.peripheral.keys()
+        self.peripherals.keys()
     }
 
     /// Returns a mutable reference to the peripheral with name `name`.
     pub fn periph(&mut self, name: &str) -> &mut Peripheral {
-        self.peripherals.peripheral.get_mut(name).unwrap()
+        self.peripherals.get_mut(name).unwrap()
     }
 
     /// Inserts a new peripheral `peripheral`.
     pub fn add_periph(&mut self, peripheral: Peripheral) {
-        self.peripherals.peripheral.insert(peripheral.name.clone(), peripheral);
+        self.peripherals.insert(peripheral.name.clone(), peripheral);
     }
 
     /// Inserts a new peripheral initialized by `f`.
@@ -77,19 +70,21 @@ impl Device {
 
     /// Removes the peripheral with name `name`
     pub fn remove_periph(&mut self, name: &str) -> Peripheral {
-        self.peripherals.peripheral.remove(name).unwrap()
+        self.peripherals.remove(name).unwrap()
     }
 }
 
-fn deserialize_peripheral<'de, D>(deserializer: D) -> Result<IndexMap<String, Peripheral>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let mut map = IndexMap::new();
-    for peripheral in Vec::<Peripheral>::deserialize(deserializer)? {
-        map.insert(peripheral.name.clone(), peripheral);
+impl PeripheralsWrapper {
+    fn deserialize<'de, D>(deserializer: D) -> Result<IndexMap<String, Peripheral>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut map = IndexMap::new();
+        for peripheral in <Self as Deserialize>::deserialize(deserializer)?.values {
+            map.insert(peripheral.name.clone(), peripheral);
+        }
+        Ok(map)
     }
-    Ok(map)
 }
 
 fn deserialize_int<'de, D>(deserializer: D) -> Result<u32, D::Error>

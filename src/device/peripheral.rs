@@ -39,31 +39,27 @@ pub struct Peripheral {
     /// Default access rights for all registers in the peripheral.
     #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
-    pub(crate) registers: Option<Registers>,
+    #[serde(default, with = "RegistersWrapper")]
+    pub(crate) registers: IndexMap<String, RegisterTree>,
     #[serde(skip)]
     pub(crate) variants: Vec<String>,
 }
 
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct Registers {
-    #[serde(rename = "$value", deserialize_with = "deserialize_register_tree")]
-    pub(crate) tree: IndexMap<String, RegisterTree>,
+#[derive(Deserialize)]
+struct RegistersWrapper {
+    #[serde(rename = "$value")]
+    values: Vec<RegisterTree>,
 }
 
 impl Peripheral {
     /// Returns a mutable reference to the register at the path `path`.
     pub fn reg(&mut self, path: &str) -> &mut Register {
-        tree_reg(&mut self.registers.as_mut().unwrap().tree, path)
+        tree_reg(&mut self.registers, path)
     }
 
     /// Adds a new register `register`.
     pub fn add_reg(&mut self, register: Register) {
-        self.registers
-            .get_or_insert_with(Default::default)
-            .tree
-            .insert(register.name.clone(), RegisterTree::Register(register));
+        self.registers.insert(register.name.clone(), RegisterTree::Register(register));
     }
 
     /// Adds a new register initialized by `f`.
@@ -75,7 +71,7 @@ impl Peripheral {
 
     /// Removes the register at the path `path`.
     pub fn remove_reg(&mut self, path: &str) -> Register {
-        tree_remove_reg(&mut self.registers.as_mut().unwrap().tree, path)
+        tree_remove_reg(&mut self.registers, path)
     }
 
     pub(crate) fn derived_from<'a>(&'a self, device: &'a Device) -> Result<Option<&'a Self>> {
@@ -83,7 +79,6 @@ impl Peripheral {
             Some(
                 device
                     .peripherals
-                    .peripheral
                     .get(derived_from)
                     .ok_or_else(|| eyre!("peripheral referenced in `derivedFrom` not found"))?,
             )
@@ -101,19 +96,19 @@ impl Peripheral {
     }
 }
 
-fn deserialize_register_tree<'de, D>(
-    deserializer: D,
-) -> Result<IndexMap<String, RegisterTree>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let mut map = IndexMap::new();
-    for tree in Vec::<RegisterTree>::deserialize(deserializer)? {
-        let name = match &tree {
-            RegisterTree::Register(register) => register.name.clone(),
-            RegisterTree::Cluster(cluster) => cluster.name.clone(),
-        };
-        map.insert(name, tree);
+impl RegistersWrapper {
+    fn deserialize<'de, D>(deserializer: D) -> Result<IndexMap<String, RegisterTree>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut map = IndexMap::new();
+        for tree in <Self as Deserialize>::deserialize(deserializer)?.values {
+            let name = match &tree {
+                RegisterTree::Register(register) => register.name.clone(),
+                RegisterTree::Cluster(cluster) => cluster.name.clone(),
+            };
+            map.insert(name, tree);
+        }
+        Ok(map)
     }
-    Ok(map)
 }

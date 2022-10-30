@@ -35,8 +35,7 @@ pub(crate) struct Cluster {
     /// Cluster address relative to the <baseAddress> of the peripheral.
     #[serde(deserialize_with = "deserialize_int")]
     pub address_offset: u32,
-    // See https://github.com/RReverser/serde-xml-rs/issues/55#issuecomment-473679067
-    #[serde(default, deserialize_with = "deserialize_register_tree")]
+    #[serde(default, deserialize_with = "deserialize_registers")]
     pub(crate) register: IndexMap<String, RegisterTree>,
     #[serde(skip)]
     pub(crate) variants: Vec<String>,
@@ -75,27 +74,27 @@ pub struct Register {
     /// The default value for the register at RESET.
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub reset_value: Option<u32>,
-    pub(crate) fields: Option<Fields>,
+    #[serde(default, with = "FieldsWrapper")]
+    pub(crate) fields: Vec<Field>,
     #[serde(skip)]
     pub(crate) variants: Vec<String>,
 }
 
-#[non_exhaustive]
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct Fields {
-    pub(crate) field: Vec<Field>,
+#[derive(Deserialize)]
+struct FieldsWrapper {
+    #[serde(rename = "$value")]
+    values: Vec<Field>,
 }
 
 impl Register {
     /// Returns a mutable reference to the field with name `name`.
     pub fn field(&mut self, name: &str) -> &mut Field {
-        self.fields.as_mut().unwrap().field.iter_mut().find(|field| field.name == name).unwrap()
+        self.fields.iter_mut().find(|field| field.name == name).unwrap()
     }
 
     /// Adds a new field `field`.
     pub fn add_field(&mut self, field: Field) {
-        self.fields.get_or_insert_with(Default::default).field.push(field);
+        self.fields.push(field);
     }
 
     /// Adds a new field initialized by `f`.
@@ -107,15 +106,8 @@ impl Register {
 
     /// Removes the field with name `name`.
     pub fn remove_field(&mut self, name: &str) -> Field {
-        let index = self
-            .fields
-            .as_ref()
-            .unwrap()
-            .field
-            .iter()
-            .position(|field| field.name == name)
-            .unwrap();
-        self.fields.as_mut().unwrap().field.remove(index)
+        let index = self.fields.iter().position(|field| field.name == name).unwrap();
+        self.fields.remove(index)
     }
 
     pub(crate) fn size(
@@ -259,7 +251,16 @@ pub(crate) fn tree_remove_reg(tree: &mut IndexMap<String, RegisterTree>, path: &
     panic!("register not found");
 }
 
-fn deserialize_register_tree<'de, D>(
+impl FieldsWrapper {
+    fn deserialize<'de, D>(deserializer: D) -> Result<Vec<Field>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(<Self as Deserialize>::deserialize(deserializer)?.values)
+    }
+}
+
+fn deserialize_registers<'de, D>(
     deserializer: D,
 ) -> Result<IndexMap<String, RegisterTree>, D::Error>
 where
