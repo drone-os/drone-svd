@@ -1,4 +1,4 @@
-use super::access::Access;
+use super::access::{Access, AccessWrapper};
 use super::register::{tree_reg, tree_remove_reg, Register, RegisterTree};
 use super::{deserialize_int, deserialize_int_opt, Device};
 use eyre::{eyre, Result};
@@ -37,6 +37,7 @@ pub struct Peripheral {
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub reset_value: Option<u32>,
     /// Default access rights for all registers in the peripheral.
+    #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
     pub(crate) registers: Option<Registers>,
     #[serde(skip)]

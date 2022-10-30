@@ -14,6 +14,10 @@
     utils.lib.eachDefaultSystem (system:
       let
         rustChannel = {
+          channel = "1.64";
+          sha256 = "8len3i8oTwJSOJZMosGGXHBL5BVuGQnWOT2St5YAUFU=";
+        };
+        rustFmtChannel = {
           channel = "nightly";
           date = "2022-09-23";
           sha256 = "lv8DWMZm/vmAfC8RF8nwMXKp2xiMxtsthqTEs7bWyms=";
@@ -25,9 +29,9 @@
             rustc
             cargo
             clippy
-            rustfmt
             rust-src
           ]);
+        rustFmt = (fenix.packages.${system}.toolchainOf rustFmtChannel).rustfmt;
         rustAnalyzer = fenix.packages.${system}.rust-analyzer;
 
         cargoRdme = (
@@ -79,6 +83,7 @@
           name = "native";
           nativeBuildInputs = [
             rustToolchain
+            rustFmt
             rustAnalyzer
             cargoRdme
             checkAll

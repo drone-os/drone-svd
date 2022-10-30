@@ -1,4 +1,4 @@
-use super::access::Access;
+use super::access::{Access, AccessWrapper};
 use super::field::Field;
 use super::peripheral::Peripheral;
 use super::{deserialize_int, deserialize_int_opt, Device};
@@ -70,6 +70,7 @@ pub struct Register {
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub size: Option<u32>,
     /// The access rights for the register.
+    #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
     /// The default value for the register at RESET.
     #[serde(default, deserialize_with = "deserialize_int_opt")]

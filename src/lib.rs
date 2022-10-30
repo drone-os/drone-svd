@@ -14,9 +14,6 @@
 //! drone-svd = { version = "0.15.0" }
 //! ```
 
-#![feature(cell_update)]
-#![feature(generator_trait)]
-#![feature(generators)]
 #![warn(missing_docs, unsafe_op_in_unsafe_fn)]
 #![warn(clippy::pedantic)]
 #![allow(
@@ -35,13 +32,13 @@ mod variant;
 use self::register::{generate_index, generate_registers};
 use self::variant::trace_variants;
 pub use device::{Access, Device, Field, Peripheral, Register};
-use eyre::{eyre, Result};
+use eyre::Result;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::mem;
 use std::ops::Range;
 use std::path::Path;
-use std::{env, mem};
 
 /// Options to configure how bindings are generated.
 pub struct Config<'a> {
@@ -96,19 +93,7 @@ pub fn parse<P: AsRef<Path>>(path: P) -> Result<Device> {
     let mut input = BufReader::new(File::open(path)?);
     let mut xml = String::new();
     input.read_to_string(&mut xml)?;
-    serde_xml_rs::from_reader(xml.as_bytes()).map_err(|err| eyre!("{}", err))
-}
-
-/// Instructs cargo to rerun the build script when RUSTFLAGS environment
-/// variables changed.
-pub fn rerun_if_env_changed() {
-    for (var, _) in env::vars_os() {
-        if let Some(var) = var.to_str() {
-            if var.ends_with("RUSTFLAGS") {
-                println!("cargo:rerun-if-env-changed={}", var);
-            }
-        }
-    }
+    Ok(quick_xml::de::from_str(&xml)?)
 }
 
 fn normalize(device: &mut Device) {

@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 /// Predefined access rights.
 #[non_exhaustive]
@@ -16,4 +16,18 @@ pub enum Access {
     /// reset will have an effect on the content. Other write operations have an
     /// undefined result.
     ReadWriteonce,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct AccessWrapper {
+    #[serde(rename = "$value")]
+    value: Option<Access>,
+}
+
+impl AccessWrapper {
+    pub(crate) fn deserialize<'de, D: Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Option<Access>, D::Error> {
+        Ok(<Self as Deserialize>::deserialize(deserializer)?.value)
+    }
 }

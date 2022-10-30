@@ -1,4 +1,4 @@
-use super::access::Access;
+use super::access::{Access, AccessWrapper};
 use super::deserialize_int_opt;
 use serde::Deserialize;
 
@@ -33,6 +33,7 @@ pub struct Field {
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub msb: Option<u32>,
     /// The access type.
+    #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
 }
 

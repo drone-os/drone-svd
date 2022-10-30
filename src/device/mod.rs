@@ -4,6 +4,7 @@ mod peripheral;
 mod register;
 
 pub use self::access::Access;
+use self::access::AccessWrapper;
 pub use self::field::Field;
 pub use self::peripheral::Peripheral;
 pub use self::register::Register;
@@ -27,6 +28,7 @@ pub struct Device {
     #[serde(default, deserialize_with = "deserialize_int_opt")]
     pub reset_value: Option<u32>,
     /// Default access rights for all registers.
+    #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
     pub(crate) peripherals: Peripherals,
 }
