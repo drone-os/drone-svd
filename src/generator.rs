@@ -7,19 +7,22 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use std::mem;
-use std::ops::Range;
+
+pub trait RegisterTraitsCallback: Fn(String, Vec<String>, u32) -> Vec<String> {}
+
+impl<T: Fn(String, Vec<String>, u32) -> Vec<String>> RegisterTraitsCallback for T {}
 
 /// Memory-mapped register bindings generator.
 pub struct Generator<'a> {
     macro_name: &'a str,
-    bit_band: Option<Range<u32>>,
     exclude_peripherals: Vec<&'a str>,
+    register_traits_callback: Option<Box<dyn RegisterTraitsCallback>>,
 }
 
 impl<'a> Generator<'a> {
     /// Creates a blank new set of options ready for configuration.
     pub fn new(macro_name: &'a str) -> Self {
-        Self { macro_name, bit_band: None, exclude_peripherals: Vec::new() }
+        Self { macro_name, exclude_peripherals: Vec::new(), register_traits_callback: None }
     }
 
     /// Extends the list of peripherals to exclude from generated bindings.
@@ -28,9 +31,13 @@ impl<'a> Generator<'a> {
         self
     }
 
-    /// Sets bit-band memory region.
-    pub fn bit_band(&mut self, bit_band: Range<u32>) -> &mut Self {
-        self.bit_band = Some(bit_band);
+    /// Sets a callback function to provide additional register traits based on
+    /// its memory address.
+    pub fn register_traits_callback(
+        &mut self,
+        register_traits_callback: impl RegisterTraitsCallback + 'static,
+    ) -> &mut Self {
+        self.register_traits_callback = Some(Box::new(register_traits_callback));
         self
     }
 
@@ -60,7 +67,7 @@ impl<'a> Generator<'a> {
                 peripheral,
                 &mut generated,
                 stagger,
-                &self.bit_band,
+                &self.register_traits_callback,
             )?;
         }
         Ok(())
@@ -129,7 +136,7 @@ fn generate_peripheral(
     peripheral: &Peripheral,
     generated: &mut HashSet<(String, Vec<String>)>,
     mut stagger: impl FnMut() -> bool,
-    bit_band: &Option<Range<u32>>,
+    register_traits_callback: &Option<Box<dyn RegisterTraitsCallback>>,
 ) -> Result<()> {
     let parent = peripheral.derived_from(device)?;
     traverse_peripheral_registers(peripheral, parent, |clusters, register| {
@@ -206,7 +213,7 @@ fn generate_peripheral(
                             }
                         }
                         if !stagger() {
-                            generate_variants(output, &instances, bit_band)?;
+                            generate_variants(output, &instances, register_traits_callback)?;
                         }
                     }
                     Ok(())
@@ -272,7 +279,7 @@ fn generate_peripheral_index(
 fn generate_variants(
     output: &mut File,
     instances: &[(&Register, Instance)],
-    bit_band: &Option<Range<u32>>,
+    register_traits_callback: &Option<Box<dyn RegisterTraitsCallback>>,
 ) -> Result<()> {
     writeln!(output, "reg! {{")?;
     for (register, instance) in instances {
@@ -314,9 +321,9 @@ fn generate_variants(
                 write!(output, " WReg")?;
             }
         }
-        if let Some(bit_band) = bit_band {
-            if bit_band.contains(address) {
-                write!(output, " RegBitBand")?;
+        if let Some(register_traits_callback) = register_traits_callback {
+            for name in register_traits_callback(peripheral_name.clone(), name.clone(), *address) {
+                write!(output, " {name}")?;
             }
         }
         writeln!(output, " }};")?;
