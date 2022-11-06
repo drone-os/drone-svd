@@ -88,7 +88,6 @@ impl<'a> Generator<'a> {
         writeln!(output, "reg::tokens! {{")?;
         writeln!(output, "    /// Defines an index of {} register tokens.", device.name)?;
         writeln!(output, "    pub macro {};", self.macro_name)?;
-        writeln!(output, "    use macro drone_cortexm::map::cortexm_reg_tokens;")?;
         writeln!(output, "    super::inner;")?;
         writeln!(output, "    crate::reg;")?;
         for (peripheral_name, registers) in index {
