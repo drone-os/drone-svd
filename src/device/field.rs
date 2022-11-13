@@ -41,6 +41,9 @@ pub struct Field {
     /// The access type.
     #[serde(default, with = "AccessWrapper")]
     pub access: Option<Access>,
+    /// Force the field to have multiple bits interface.
+    #[serde(skip)]
+    pub force_bits: bool,
 }
 
 impl Field {

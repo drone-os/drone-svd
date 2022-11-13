@@ -361,6 +361,9 @@ fn generate_field(output: &mut File, field: &Field, base_access: Option<Access>)
                 write!(output, " WWRegField")?;
             }
         }
+        if field.force_bits {
+            write!(output, " ForceBits")?;
+        }
         writeln!(output, " }};")?;
         writeln!(output, "            }};")?;
     }
