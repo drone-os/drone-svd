@@ -110,6 +110,11 @@ impl Register {
         self.fields.remove(index)
     }
 
+    /// Returns a new iterator over mutable references to the fields.
+    pub fn fields(&mut self) -> impl Iterator<Item = &mut Field> {
+        self.fields.iter_mut()
+    }
+
     pub(crate) fn size(
         &self,
         device: &Device,
