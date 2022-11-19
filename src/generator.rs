@@ -12,17 +12,38 @@ pub trait RegisterTraitsCallback: Fn(String, Vec<String>, u32) -> Vec<String> {}
 
 impl<T: Fn(String, Vec<String>, u32) -> Vec<String>> RegisterTraitsCallback for T {}
 
+pub trait CoreRegPredicate: Fn(String, Vec<String>) -> bool {}
+
+impl<T: Fn(String, Vec<String>) -> bool> CoreRegPredicate for T {}
+
 /// Memory-mapped register bindings generator.
 pub struct Generator<'a> {
     macro_name: &'a str,
     exclude_peripherals: Vec<&'a str>,
     register_traits_callback: Option<Box<dyn RegisterTraitsCallback>>,
+    core_regs: Option<(&'a str, &'a str, Box<dyn CoreRegPredicate>)>,
 }
 
 impl<'a> Generator<'a> {
     /// Creates a blank new set of options ready for configuration.
     pub fn new(macro_name: &'a str) -> Self {
-        Self { macro_name, exclude_peripherals: Vec::new(), register_traits_callback: None }
+        Self {
+            macro_name,
+            exclude_peripherals: Vec::new(),
+            register_traits_callback: None,
+            core_regs: None,
+        }
+    }
+
+    /// Extracts core-level registers into a separate set of tokens.
+    pub fn core_regs(
+        &mut self,
+        macro_name: &'a str,
+        prev_macro: &'a str,
+        core_reg_predicate: impl CoreRegPredicate + 'static,
+    ) -> &mut Self {
+        self.core_regs = Some((macro_name, prev_macro, Box::new(core_reg_predicate)));
+        self
     }
 
     /// Extends the list of peripherals to exclude from generated bindings.
@@ -85,36 +106,29 @@ impl<'a> Generator<'a> {
             }
             generate_peripheral_index(&device, peripheral, &mut index)?;
         }
-        writeln!(output, "reg::tokens! {{")?;
-        writeln!(output, "    /// Defines an index of {} register tokens.", device.name)?;
-        writeln!(output, "    pub macro {};", self.macro_name)?;
-        writeln!(output, "    super::inner;")?;
-        writeln!(output, "    crate::reg;")?;
-        for (peripheral_name, registers) in index {
-            let peripheral = &device.peripherals[&peripheral_name];
-            let parent = peripheral.derived_from(&device)?;
-            if let Some(description) = peripheral.description(parent) {
-                for line in description.lines() {
-                    writeln!(output, "    /// {}", line.trim())?;
-                }
-            }
-            writeln!(output, "    pub mod {} {{", peripheral_name)?;
-            for (name, primary) in registers {
-                write!(output, "        ")?;
-                if !primary {
-                    write!(output, "!")?;
-                }
-                for (i, name) in name.iter().enumerate() {
-                    if i > 0 {
-                        write!(output, "_")?;
-                    }
-                    write!(output, "{}", name)?;
-                }
-                writeln!(output, ";")?;
-            }
-            writeln!(output, "    }}")?;
+        generate_reg_tokens(
+            output,
+            &device,
+            &index,
+            &format!("Defines an index of {} MCU-level register tokens.", device.name),
+            self.macro_name,
+            None,
+            self.core_regs.as_ref().map(|(_, _, core_regs_predicate)| core_regs_predicate),
+            false,
+        )?;
+        if let Some((macro_name, prev_macro, core_regs_predicate)) = &self.core_regs {
+            writeln!(output)?;
+            generate_reg_tokens(
+                output,
+                &device,
+                &index,
+                &format!("Defines an index of {} core-level register tokens.", device.name),
+                macro_name,
+                Some(prev_macro),
+                Some(core_regs_predicate),
+                true,
+            )?;
         }
-        writeln!(output, "}}")?;
         Ok(())
     }
 }
@@ -367,6 +381,62 @@ fn generate_field(output: &mut File, field: &Field, base_access: Option<Access>)
         writeln!(output, " }};")?;
         writeln!(output, "            }};")?;
     }
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments, clippy::borrowed_box)]
+fn generate_reg_tokens(
+    output: &mut File,
+    device: &Device,
+    index: &IndexMap<String, IndexMap<Vec<String>, bool>>,
+    macro_doc: &str,
+    macro_name: &str,
+    prev_macro: Option<&str>,
+    core_reg_predicate: Option<&Box<dyn CoreRegPredicate>>,
+    core_regs: bool,
+) -> Result<()> {
+    writeln!(output, "reg::tokens! {{")?;
+    writeln!(output, "    /// {}", macro_doc)?;
+    writeln!(output, "    pub macro {};", macro_name)?;
+    if let Some(prev_macro) = prev_macro {
+        writeln!(output, "    use macro {};", prev_macro)?;
+    }
+    writeln!(output, "    super::inner;")?;
+    writeln!(output, "    crate::reg;")?;
+    for (peripheral_name, registers) in index {
+        let peripheral = &device.peripherals[peripheral_name];
+        let parent = peripheral.derived_from(device)?;
+        if let Some(description) = peripheral.description(parent) {
+            for line in description.lines() {
+                writeln!(output, "    /// {}", line.trim())?;
+            }
+        }
+        writeln!(
+            output,
+            "    pub mod {}{} {{",
+            core_regs.then_some("!").unwrap_or_default(),
+            peripheral_name
+        )?;
+        for (name, primary) in registers {
+            let core_reg = core_reg_predicate.map_or(false, |predicate| {
+                let core_reg = !predicate(peripheral_name.clone(), name.clone());
+                if core_regs { core_reg } else { !core_reg }
+            });
+            write!(output, "        ")?;
+            if !primary || (!core_regs && core_reg) {
+                write!(output, "!")?;
+            }
+            for (i, name) in name.iter().enumerate() {
+                if i > 0 {
+                    write!(output, "_")?;
+                }
+                write!(output, "{}", name)?;
+            }
+            writeln!(output, ";")?;
+        }
+        writeln!(output, "    }}")?;
+    }
+    writeln!(output, "}}")?;
     Ok(())
 }
 
